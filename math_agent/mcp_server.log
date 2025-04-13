@@ -1,0 +1,66 @@
+2025-04-13 23:29:21,505 - DEBUG -             __init__() Initializing server 'Calculator'
+2025-04-13 23:29:21,505 - DEBUG -            decorator() Registering handler for ListToolsRequest
+2025-04-13 23:29:21,506 - DEBUG -            decorator() Registering handler for CallToolRequest
+2025-04-13 23:29:21,506 - DEBUG -            decorator() Registering handler for ListResourcesRequest
+2025-04-13 23:29:21,506 - DEBUG -            decorator() Registering handler for ReadResourceRequest
+2025-04-13 23:29:21,506 - DEBUG -            decorator() Registering handler for PromptListRequest
+2025-04-13 23:29:21,506 - DEBUG -            decorator() Registering handler for GetPromptRequest
+2025-04-13 23:29:21,506 - DEBUG -            decorator() Registering handler for ListResourceTemplatesRequest
+2025-04-13 23:29:21,561 - DEBUG -             __init__() Using proactor: IocpProactor
+2025-04-13 23:29:21,574 - DEBUG -                  run() Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2025-04-13 23:29:23,673 - DEBUG -                  run() Received message: <mcp.shared.session.RequestResponder object at 0x000001786EBCD310>
+2025-04-13 23:29:23,673 - INFO -      _handle_request() Processing request of type ListToolsRequest
+2025-04-13 23:29:23,674 - DEBUG -      _handle_request() Dispatching request of type ListToolsRequest
+2025-04-13 23:29:23,677 - DEBUG -      _handle_request() Response sent
+2025-04-13 23:29:28,493 - DEBUG -                  run() Received message: <mcp.shared.session.RequestResponder object at 0x000001786EBCC910>
+2025-04-13 23:29:28,494 - INFO -      _handle_request() Processing request of type CallToolRequest
+2025-04-13 23:29:28,494 - DEBUG -      _handle_request() Dispatching request of type CallToolRequest
+2025-04-13 23:29:28,495 - DEBUG -      _handle_request() Response sent
+2025-04-13 23:29:29,811 - DEBUG -                  run() Received message: <mcp.shared.session.RequestResponder object at 0x000001786E1BFA80>
+2025-04-13 23:29:29,811 - INFO -      _handle_request() Processing request of type CallToolRequest
+2025-04-13 23:29:29,811 - DEBUG -      _handle_request() Dispatching request of type CallToolRequest
+2025-04-13 23:29:29,812 - DEBUG -      _handle_request() Response sent
+2025-04-13 23:29:30,915 - DEBUG -                  run() Received message: <mcp.shared.session.RequestResponder object at 0x000001786E1BF5C0>
+2025-04-13 23:29:30,915 - INFO -      _handle_request() Processing request of type CallToolRequest
+2025-04-13 23:29:30,916 - DEBUG -      _handle_request() Dispatching request of type CallToolRequest
+2025-04-13 23:29:32,327 - INFO -           open_paint() Paint window found, verifying UI elements...
+2025-04-13 23:29:32,842 - INFO -           open_paint() Canvas element found and verified
+2025-04-13 23:29:32,845 - INFO -           open_paint() Canvas dimensions: (L0, T34, R0, B34)
+2025-04-13 23:29:32,853 - INFO -           open_paint() 
+==================== Display Configuration ====================
+2025-04-13 23:29:32,853 - INFO -           open_paint() Total number of monitors: 1
+2025-04-13 23:29:33,361 - INFO -           open_paint() Window successfully maximized
+2025-04-13 23:29:33,946 - INFO -           open_paint() UI elements verified and accessible
+2025-04-13 23:29:34,947 - INFO -           open_paint() Paint initialization complete and verified
+2025-04-13 23:29:34,948 - DEBUG -      _handle_request() Response sent
+2025-04-13 23:29:36,221 - DEBUG -                  run() Received message: <mcp.shared.session.RequestResponder object at 0x000001786EB1ED50>
+2025-04-13 23:29:36,222 - INFO -      _handle_request() Processing request of type CallToolRequest
+2025-04-13 23:29:36,223 - DEBUG -      _handle_request() Dispatching request of type CallToolRequest
+2025-04-13 23:29:36,223 - ERROR - get_screen_canvas_dimensions() Error getting canvas resolution: name 'Config' is not defined
+2025-04-13 23:29:36,223 - DEBUG -      _handle_request() Response sent
+2025-04-13 23:29:37,589 - DEBUG -                  run() Received message: <mcp.shared.session.RequestResponder object at 0x000001786E23F460>
+2025-04-13 23:29:37,590 - INFO -      _handle_request() Processing request of type CallToolRequest
+2025-04-13 23:29:37,590 - DEBUG -      _handle_request() Dispatching request of type CallToolRequest
+2025-04-13 23:29:37,591 - ERROR - get_screen_canvas_dimensions() Error getting canvas resolution: name 'Config' is not defined
+2025-04-13 23:29:37,591 - DEBUG -      _handle_request() Response sent
+2025-04-13 23:29:38,866 - DEBUG -                  run() Received message: <mcp.shared.session.RequestResponder object at 0x000001786E23E140>
+2025-04-13 23:29:38,867 - INFO -      _handle_request() Processing request of type CallToolRequest
+2025-04-13 23:29:38,867 - DEBUG -      _handle_request() Dispatching request of type CallToolRequest
+2025-04-13 23:29:38,867 - ERROR - get_screen_canvas_dimensions() Error getting canvas resolution: name 'Config' is not defined
+2025-04-13 23:29:38,868 - DEBUG -      _handle_request() Response sent
+2025-04-13 23:29:40,155 - DEBUG -                  run() Received message: <mcp.shared.session.RequestResponder object at 0x000001786EBA4050>
+2025-04-13 23:29:40,156 - INFO -      _handle_request() Processing request of type CallToolRequest
+2025-04-13 23:29:40,156 - DEBUG -      _handle_request() Dispatching request of type CallToolRequest
+2025-04-13 23:29:40,156 - ERROR - get_screen_canvas_dimensions() Error getting canvas resolution: name 'Config' is not defined
+2025-04-13 23:29:40,157 - DEBUG -      _handle_request() Response sent
+2025-04-13 23:29:41,893 - DEBUG -                  run() Received message: <mcp.shared.session.RequestResponder object at 0x000001786EBA6650>
+2025-04-13 23:29:41,893 - INFO -      _handle_request() Processing request of type CallToolRequest
+2025-04-13 23:29:41,894 - DEBUG -      _handle_request() Dispatching request of type CallToolRequest
+2025-04-13 23:29:41,894 - INFO -       draw_rectangle() Starting rectangle drawing operation from (50,50) to (750,550)
+2025-04-13 23:29:46,897 - ERROR -       draw_rectangle() Error in draw_rectangle: {'class_name': 'MSPaintApp', 'backend': 'win32', 'process': 7540}
+2025-04-13 23:29:46,899 - DEBUG -      _handle_request() Response sent
+2025-04-13 23:29:48,152 - DEBUG -                  run() Received message: <mcp.shared.session.RequestResponder object at 0x000001786E2433E0>
+2025-04-13 23:29:48,153 - INFO -      _handle_request() Processing request of type CallToolRequest
+2025-04-13 23:29:48,154 - DEBUG -      _handle_request() Dispatching request of type CallToolRequest
+2025-04-13 23:29:48,154 - ERROR - get_screen_canvas_dimensions() Error getting canvas resolution: name 'Config' is not defined
+2025-04-13 23:29:48,155 - DEBUG -      _handle_request() Response sent
