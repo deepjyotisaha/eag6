@@ -21,6 +21,9 @@ from config.mcp_server_config import MCP_SERVER_CONFIG
 from config.log_config import setup_logging
 from llm.llm import LLMManager
 from planner.planner import Planner
+from action.action import ActionExecutor
+from memory.working_memory import ExecutionHistory  # Updated import path
+
 
 
 # Get logger for this module
@@ -36,14 +39,6 @@ last_response = None
 iteration = 0
 iteration_response = []
 
-class ExecutionHistory:
-    def __init__(self):
-        self.plan = None
-        self.steps = []
-        self.final_answer = None
-        self.user_query = None
-
-execution_history = ExecutionHistory()
 
 def reset_state():
     """Reset all global variables to their initial state"""
@@ -65,6 +60,9 @@ async def agent_main():
             "Initializing math agent...",
             "Startup"
         )
+
+        # Initialize execution history
+        execution_history = ExecutionHistory()
         
         # Initialize LLM
         llm_manager = LLMManager()
@@ -72,6 +70,8 @@ async def agent_main():
 
         # Initialize planner with generate_with_timeout function
         planner = Planner(llm_manager)
+
+        action_executor = ActionExecutor()
 
         # Create a single MCP server connection
         logging.info("Establishing connection to MCP server...")
@@ -186,7 +186,6 @@ async def agent_main():
                     logging.info("Exiting due to plan abortion or error")
                     return
                 
-
                 logging.info("Starting execution with confirmed plan...")
                 #logging.debug(f"Query: {query}")
                 #logging.debug(f"System prompt: {system_prompt}")
@@ -232,113 +231,22 @@ async def agent_main():
                             response_type = response_json.get("response_type")
                                 
                             if response_type == "function_call":
-                                # Extract function call details
                                 function_info = response_json.get("function", {})
                                 func_name = function_info.get("name")
-                                parameters = function_info.get("parameters", {})
-                                reasoning_tag = function_info.get("reasoning_tag")
-                                reasoning = function_info.get("reasoning")
-                                
-                                logging.info(f"\nDEBUG: Function call: {func_name}")
-                                logging.info(f"DEBUG: Parameters: {parameters}")
-                                logging.info(f"DEBUG: Reasoning tag: {reasoning_tag}")
-                                logging.info(f"DEBUG: Reasoning: {reasoning}")
 
-                                try:
-                                    # Find the matching tool to get its input schema
-                                    tool = next((t for t in tools if t.name == func_name), None)
-                                    if not tool:
-                                        logging.info(f"DEBUG: Available tools: {[t.name for t in tools]}")
-                                        raise ValueError(f"Unknown tool: {func_name}")
-
-                                    logging.info(f"DEBUG: Found tool: {tool.name}")
-                                    logging.info(f"DEBUG: Tool schema: {tool.inputSchema}")
-
-                                    # Get the correct session from the tool
-                                    session = tool.server_session
-                                    if not session:
-                                        raise ValueError(f"No session found for tool: {func_name}")
-
-                                    # Prepare arguments according to the tool's input schema
-                                    arguments = {}
-                                    schema_properties = tool.inputSchema.get('properties', {})
-                                    logging.info(f"DEBUG: Schema properties: {schema_properties}")
-
-                                    # Convert parameters dictionary to a list of values
-                                    params = list(parameters.values())
-                                    logging.info(f"DEBUG: Parameters list: {params}")
-
-                                    for param_name, param_info in schema_properties.items():
-                                        if not params:  # Check if we have enough parameters
-                                            raise ValueError(f"Not enough parameters provided for {func_name}")
-                                        
-                                        value = params.pop(0)  # Get and remove the first parameter
-                                        param_type = param_info.get('type', 'string')
-
-                                        logging.info(f"DEBUG: Converting parameter {param_name} with value {value} to type {param_type}")
-                                        # Convert the value to the correct type based on the schema
-                                        if param_type == 'integer':
-                                            arguments[param_name] = int(value)
-                                        elif param_type == 'number':
-                                            arguments[param_name] = float(value)
-                                        elif param_type == 'array':
-                                            # Handle array input
-                                            if isinstance(value, str):
-                                                # If it's a string, parse it
-                                                value = value.strip('[]').split(',')
-                                                arguments[param_name] = [int(x.strip()) for x in value]
-                                            elif isinstance(value, list):
-                                                # If it's a list, check if it's nested
-                                                if len(value) > 0 and isinstance(value[0], list):
-                                                    # If nested, use the first list
-                                                    arguments[param_name] = value[0]
-                                                else:
-                                                    # If not nested, use as is
-                                                    arguments[param_name] = value
-                                            else:
-                                                # If it's neither string nor list, raise error
-                                                raise ValueError(f"Invalid array parameter: {value}")
-
-                                            logging.info(f"DEBUG: Final array value: {arguments[param_name]}")
-                                        else:
-                                            arguments[param_name] = str(value)
-
-                                    logging.info(f"DEBUG: Final arguments: {arguments}")
-                                    logging.info(f"DEBUG: Calling tool {func_name}")
-
-                                    # Execute the tool with our converted arguments
-                                    result = await session.call_tool(func_name, arguments=arguments)
-                                    logging.info(f"DEBUG: Raw result: {result}")
+                                # Find matching tool
+                                tool = next((t for t in tools if t.name == func_name), None)
+                                if not tool:
+                                    logging.error(f"Unknown tool: {func_name}")
+                                    continue
                                     
-                                    # Process result
-                                    if hasattr(result, 'content'):
-                                        if isinstance(result.content, list):
-                                            iteration_result = [
-                                                item.text if hasattr(item, 'text') else str(item)
-                                                for item in result.content
-                                            ]
-                                        else:
-                                            iteration_result = str(result.content)
-                                    else:
-                                        iteration_result = str(result)
-                                        
-                                    # Store execution details
-                                    execution_history.steps.append({
-                                        "step_number": len(execution_history.steps) + 1,
-                                        "function": func_name,
-                                        "parameters": parameters,
-                                        "reasoning_tag": reasoning_tag,
-                                        "reasoning": reasoning,
-                                        "result": iteration_result
-                                    })
+                                # Execute tool using ActionExecutor
+                                result = await action_executor.execute_tool(tool, function_info, tools, execution_history)
+                                if result is None:
+                                    break  # Exit on error
+                                
+                                iteration_response.append(result)
 
-                                except Exception as e:
-                                    logging.error(f"DEBUG: Error details: {str(e)}")
-                                    logging.error(f"DEBUG: Error type: {type(e)}")
-                                    import traceback
-                                    traceback.print_exc()
-                                    iteration_response.append(f"Error in iteration {iteration + 1}: {str(e)}")
-                                    break
 
                             elif response_type == "final_answer":
                                 logging.info("\n=== Agent Execution Complete ===")
