@@ -2,16 +2,17 @@ import json
 import logging
 from typing import Optional, Dict
 from userinteraction.console_ui import UserInteraction
+from llm.llm import LLMManager
 
 class Planner:
-    def __init__(self, generate_with_timeout_fn):
+    def __init__(self, llm_manager: LLMManager):
         """
         Initialize the planner
         
         Args:
-            generate_with_timeout_fn: Function to generate LLM responses with timeout
+            llm_manager: LLMManager instance
         """
-        self.generate_with_timeout = generate_with_timeout_fn
+        self.llm_manager = llm_manager
         self.logger = logging.getLogger(__name__)
 
     async def get_plan(self, system_prompt: str, execution_history) -> Optional[Dict]:
@@ -30,12 +31,19 @@ class Planner:
         try:
             # Generate plan from LLM
             plan_prompt = f"{system_prompt}\n\nPlease generate a plan for the following query: {execution_history.user_query}"
-            response = await self.generate_with_timeout(plan_prompt)
+            response = await self.llm_manager.generate_with_timeout(plan_prompt)
             response_text = response.text
+
+            # Clean and validate the response
+            if not self.llm_manager.validate_response(response_text, expected_type="plan"):
+                raise ValueError("Invalid plan response format")
+                
+            response_text = self.llm_manager.clean_response(response_text)
+            self.logger.info(f"Plan response: {response_text}")
             
             # Clean the response text by removing markdown code block markers
-            response_text = response_text.replace('```json', '').replace('```', '').strip()
-            self.logger.info(f"Plan response: {response_text}")
+            #response_text = response_text.replace('```json', '').replace('```', '').strip()
+            #self.logger.info(f"Plan response: {response_text}")
             
             try:
                 # Parse the response to get the plan

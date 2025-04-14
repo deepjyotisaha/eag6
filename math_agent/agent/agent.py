@@ -19,7 +19,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 
 from config.mcp_server_config import MCP_SERVER_CONFIG
 from config.log_config import setup_logging
+from llm.llm import LLMManager
 from planner.planner import Planner
+
 
 # Get logger for this module
 logging = setup_logging(__name__)
@@ -28,23 +30,6 @@ logging = setup_logging(__name__)
 #logging.debug("Debug message")
 #logging.info("Info message")
 #logging.error("Error message")
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Access your API key and initialize Gemini client correctly
-api_key = os.getenv('GOOGLE_API_KEY')
-if not api_key:
-    raise ValueError("GOOGLE_API_KEY not found in environment variables")
-
-logging.info("Configuring Gemini API...")
-try:
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(Config.MODEL_NAME)
-    logging.info("Gemini API configured successfully")
-except Exception as e:
-    logging.error(f"Error configuring Gemini API: {str(e)}")
-    raise
 
 max_iterations = Config.MAX_ITERATIONS
 last_response = None
@@ -59,116 +44,6 @@ class ExecutionHistory:
         self.user_query = None
 
 execution_history = ExecutionHistory()
-
-async def get_agent_plan(system_prompt: str, execution_history) -> Optional[Dict]:
-    """
-    Get the initial plan from LLM and seek user confirmation
-    
-    Args:
-        system_prompt: The system prompt to use
-        execution_history: Current execution history
-        
-    Returns:
-        Optional[Dict]: The confirmed plan or None if aborted
-    """
-    logging.info("Generating initial plan...")
-    
-    try:
-        # Generate plan from LLM
-        plan_prompt = f"{system_prompt}\n\nPlease generate a plan for the following query: {execution_history.user_query}"
-        response = await generate_with_timeout(plan_prompt)
-        response_text = response.text
-
-        logging.info(f"Plan prompt: {plan_prompt}")
-        logging.info(f"Plan response: {response_text}")
-
-        response_text = response_text.replace('```json', '').replace('```', '').strip()
-
-        # Clean up the response text
-        #cleaned_response = response_text
-        #if cleaned_response.startswith("```json"):
-        #    cleaned_response = cleaned_response[7:]  # Remove ```json prefix
-        #if cleaned_response.endswith("```"):
-        #    cleaned_response = cleaned_response[:-3]  # Remove ``` suffix
-        #cleaned_response = cleaned_response.strip()
-        
-        try:
-            # Parse the response to get the plan
-            plan_data = json.loads(response_text)
-            if plan_data.get("response_type") != "plan":
-                raise ValueError("Expected plan response type")
-            
-            plan_steps = plan_data.get("steps", [])
-            
-            # Format plan for user display
-            plan_display = "Proposed Plan:\n"
-            for step in plan_steps:
-                plan_display += f"\nStep {step['step_number']}:"
-                plan_display += f"\n- Action: {step['description']}"
-                plan_display += f"\n- Reasoning: {step['reasoning']}"
-                plan_display += f"\n- Tool: {step.get('expected_tool', 'No tool specified')}"
-            
-            # Show plan to user and get confirmation
-            choice, feedback = UserInteraction.get_confirmation(
-                plan_display,
-                "Please review the proposed plan. You can confirm to proceed, provide feedback to revise, or abort."
-            )
-            
-            if choice == "confirm":
-                logging.info("Plan confirmed by user")
-                execution_history.plan = plan_data
-                return plan_data
-            elif choice == "redo":
-                logging.info(f"User requested plan revision with feedback: {feedback}")
-                # Add feedback to prompt and try again
-                revised_prompt = f"{plan_prompt}\n\nRevision Request Feedback: {feedback}\n\nPlease generate a new plan based on the feedback."
-                return await get_agent_plan(revised_prompt, execution_history)
-            else:  # abort
-                logging.info("Plan aborted by user")
-                UserInteraction.show_information("Operation aborted by user", "Abort")
-                return None
-                
-        except json.JSONDecodeError as e:
-            logging.error(f"Failed to parse LLM response as JSON: {e}")
-            UserInteraction.report_error(
-                "Failed to generate a valid plan",
-                "Plan Generation Error",
-                f"The model response was not in the expected format: {str(e)}"
-            )
-            return None
-            
-    except Exception as e:
-        logging.error(f"Error generating plan: {str(e)}")
-        UserInteraction.report_error(
-            "Failed to generate plan",
-            "Plan Generation Error",
-            str(e)
-        )
-        return None
-
-async def generate_with_timeout(prompt, timeout=Config.TIMEOUT_SECONDS):
-    """Generate content with a timeout"""
-    logging.info("Starting LLM generation...")
-    try:
-        # Convert the synchronous generate_content call to run in a thread
-        loop = asyncio.get_event_loop()
-        response = await asyncio.wait_for(
-            loop.run_in_executor(
-                None, 
-                lambda: model.generate_content(
-                    contents=prompt
-                )
-            ),
-            timeout=timeout
-        )
-        logging.info("LLM generation completed")
-        return response
-    except TimeoutError:
-        logging.error("LLM generation timed out!")
-        raise
-    except Exception as e:
-        logging.error(f"Error in LLM generation: {e}")
-        raise
 
 def reset_state():
     """Reset all global variables to their initial state"""
@@ -191,8 +66,12 @@ async def agent_main():
             "Startup"
         )
         
+        # Initialize LLM
+        llm_manager = LLMManager()
+        llm_manager.initialize()
+
         # Initialize planner with generate_with_timeout function
-        planner = Planner(generate_with_timeout)
+        planner = Planner(llm_manager)
 
         # Create a single MCP server connection
         logging.info("Establishing connection to MCP server...")
@@ -332,7 +211,7 @@ async def agent_main():
                     prompt = system_prompt
                     #logging.debug(f"Prompt: {prompt}")
                     try:
-                        response = await generate_with_timeout(prompt)
+                        response = await llm_manager.generate_with_timeout(prompt)
                         response_text = response.text.strip()
                         logging.info(f"LLM Response: {response_text}")
                         #logging.info(f"############# Going to parse JSON ##############")
