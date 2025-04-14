@@ -327,7 +327,7 @@ async def agent_main():
                         
                         # Parse JSON response
                         try:
-                            logging.info("######################### Received execution plan: #########################")
+
                             # Clean up the response text
                             cleaned_response = response_text
                             if cleaned_response.startswith("```json"):
@@ -339,18 +339,6 @@ async def agent_main():
                             #logging.info(f"Cleaned response for parsing: {cleaned_response}")
                             response_json = json.loads(cleaned_response)
                             response_type = response_json.get("response_type")
-                            
-                            #if response_type == "plan":
-                                # Log the plan
-                            #    logging.info("######################### Received execution plan: #########################")
-                            #    for step in response_json.get("steps", []):
-                            #        logging.info(f"Step {step['step_number']}: {step['description']}")
-                            #        logging.info(f"Reasoning: {step['reasoning']}")
-                            #        logging.info(f"Expected tool: {step['expected_tool']}")
-                            #    execution_history.plan = response_json
-                            #    #logging.info(f"######################### Plan stored in execution history: {json.dumps(execution_history.plan, indent=2)} #########################")
-                            #    logging.info("######################### End of execution plan: #########################")
-                            #    #continue  # Move to next iteration for actual execution
                                 
                             if response_type == "function_call":
                                 # Extract function call details
