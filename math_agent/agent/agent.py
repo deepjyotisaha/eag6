@@ -12,6 +12,8 @@ from datetime import datetime
 from config.config import Config
 import time
 import json
+from userinteraction.console_ui import UserInteraction
+from typing import Optional, Dict, List
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
@@ -56,6 +58,92 @@ class ExecutionHistory:
         self.user_query = None
 
 execution_history = ExecutionHistory()
+
+async def get_agent_plan(system_prompt: str, execution_history) -> Optional[Dict]:
+    """
+    Get the initial plan from LLM and seek user confirmation
+    
+    Args:
+        system_prompt: The system prompt to use
+        execution_history: Current execution history
+        
+    Returns:
+        Optional[Dict]: The confirmed plan or None if aborted
+    """
+    logging.info("Generating initial plan...")
+    
+    try:
+        # Generate plan from LLM
+        plan_prompt = f"{system_prompt}\n\nPlease generate a plan for the following query: {execution_history.user_query}"
+        response = await generate_with_timeout(plan_prompt)
+        response_text = response.text
+
+        logging.info(f"Plan prompt: {plan_prompt}")
+        logging.info(f"Plan response: {response_text}")
+
+        response_text = response_text.replace('```json', '').replace('```', '').strip()
+
+        # Clean up the response text
+        #cleaned_response = response_text
+        #if cleaned_response.startswith("```json"):
+        #    cleaned_response = cleaned_response[7:]  # Remove ```json prefix
+        #if cleaned_response.endswith("```"):
+        #    cleaned_response = cleaned_response[:-3]  # Remove ``` suffix
+        #cleaned_response = cleaned_response.strip()
+        
+        try:
+            # Parse the response to get the plan
+            plan_data = json.loads(response_text)
+            if plan_data.get("response_type") != "plan":
+                raise ValueError("Expected plan response type")
+            
+            plan_steps = plan_data.get("steps", [])
+            
+            # Format plan for user display
+            plan_display = "Proposed Plan:\n"
+            for step in plan_steps:
+                plan_display += f"\nStep {step['step_number']}:"
+                plan_display += f"\n- Action: {step['description']}"
+                plan_display += f"\n- Reasoning: {step['reasoning']}"
+                plan_display += f"\n- Tool: {step.get('expected_tool', 'No tool specified')}"
+            
+            # Show plan to user and get confirmation
+            choice, feedback = UserInteraction.get_confirmation(
+                plan_display,
+                "Please review the proposed plan. You can confirm to proceed, provide feedback to revise, or abort."
+            )
+            
+            if choice == "confirm":
+                logging.info("Plan confirmed by user")
+                execution_history.plan = plan_data
+                return plan_data
+            elif choice == "redo":
+                logging.info(f"User requested plan revision with feedback: {feedback}")
+                # Add feedback to prompt and try again
+                revised_prompt = f"{plan_prompt}\n\nRevision Request Feedback: {feedback}\n\nPlease generate a new plan based on the feedback."
+                return await get_agent_plan(revised_prompt, execution_history)
+            else:  # abort
+                logging.info("Plan aborted by user")
+                UserInteraction.show_information("Operation aborted by user", "Abort")
+                return None
+                
+        except json.JSONDecodeError as e:
+            logging.error(f"Failed to parse LLM response as JSON: {e}")
+            UserInteraction.report_error(
+                "Failed to generate a valid plan",
+                "Plan Generation Error",
+                f"The model response was not in the expected format: {str(e)}"
+            )
+            return None
+            
+    except Exception as e:
+        logging.error(f"Error generating plan: {str(e)}")
+        UserInteraction.report_error(
+            "Failed to generate plan",
+            "Plan Generation Error",
+            str(e)
+        )
+        return None
 
 async def generate_with_timeout(prompt, timeout=Config.TIMEOUT_SECONDS):
     """Generate content with a timeout"""
@@ -143,8 +231,6 @@ async def agent_main():
 
                 # Combine tools (extend the list instead of adding sessions)
                 tools = math_tools + gmail_tools
-                #tools.extend(math_tools)
-                #tools.extend(gmail_tools)
         
                 logging.info(f"Combined tools: {len(tools)}")
                
@@ -202,8 +288,13 @@ async def agent_main():
                 #response = await generate_with_timeout(prompt)
                 #response_text = response.text.strip()
                 #logging.info(f"LLM Response for Plan: {response_text}")
+                system_prompt = Config.SYSTEM_PROMPT.format(tools_description=tools_description, execution_history=execution_history)
 
-
+                plan = await get_agent_plan(system_prompt, execution_history)
+                
+                if plan is None:
+                    logging.info("Exiting due to plan abortion or error")
+                    return
 
                 logging.info("Starting iteration loop...")
                 #logging.debug(f"Query: {query}")
@@ -236,6 +327,7 @@ async def agent_main():
                         
                         # Parse JSON response
                         try:
+                            logging.info("######################### Received execution plan: #########################")
                             # Clean up the response text
                             cleaned_response = response_text
                             if cleaned_response.startswith("```json"):
@@ -248,19 +340,19 @@ async def agent_main():
                             response_json = json.loads(cleaned_response)
                             response_type = response_json.get("response_type")
                             
-                            if response_type == "plan":
+                            #if response_type == "plan":
                                 # Log the plan
-                                logging.info("######################### Received execution plan: #########################")
-                                for step in response_json.get("steps", []):
-                                    logging.info(f"Step {step['step_number']}: {step['description']}")
-                                    logging.info(f"Reasoning: {step['reasoning']}")
-                                    logging.info(f"Expected tool: {step['expected_tool']}")
-                                execution_history.plan = response_json
-                                #logging.info(f"######################### Plan stored in execution history: {json.dumps(execution_history.plan, indent=2)} #########################")
-                                logging.info("######################### End of execution plan: #########################")
-                                #continue  # Move to next iteration for actual execution
+                            #    logging.info("######################### Received execution plan: #########################")
+                            #    for step in response_json.get("steps", []):
+                            #        logging.info(f"Step {step['step_number']}: {step['description']}")
+                            #        logging.info(f"Reasoning: {step['reasoning']}")
+                            #        logging.info(f"Expected tool: {step['expected_tool']}")
+                            #    execution_history.plan = response_json
+                            #    #logging.info(f"######################### Plan stored in execution history: {json.dumps(execution_history.plan, indent=2)} #########################")
+                            #    logging.info("######################### End of execution plan: #########################")
+                            #    #continue  # Move to next iteration for actual execution
                                 
-                            elif response_type == "function_call":
+                            if response_type == "function_call":
                                 # Extract function call details
                                 function_info = response_json.get("function", {})
                                 func_name = function_info.get("name")
