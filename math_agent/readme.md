@@ -11,6 +11,15 @@ This project implements a math agent that can solve mathematical problems, displ
 - Integration with Gmail MCP server for email functionality
 
 
+##TODO
+
+1. Add decision.py
+2. Add memory.pu
+3. Add frontend.py
+4. Add proper user interaction
+5. Add pyd
+6. Gooduse case
+
 ## System Prompt
 
 Role:
