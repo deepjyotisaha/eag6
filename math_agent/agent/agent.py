@@ -19,6 +19,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 
 from config.mcp_server_config import MCP_SERVER_CONFIG
 from config.log_config import setup_logging
+from planner.planner import Planner
 
 # Get logger for this module
 logging = setup_logging(__name__)
@@ -184,6 +185,15 @@ async def agent_main():
     reset_state()  # Reset at the start of main
     logging.info("Starting main execution...")
     try:
+                # Show startup information
+        UserInteraction.show_information(
+            "Initializing math agent...",
+            "Startup"
+        )
+        
+        # Initialize planner with generate_with_timeout function
+        planner = Planner(generate_with_timeout)
+
         # Create a single MCP server connection
         logging.info("Establishing connection to MCP server...")
         
@@ -290,13 +300,15 @@ async def agent_main():
                 #logging.info(f"LLM Response for Plan: {response_text}")
                 system_prompt = Config.SYSTEM_PROMPT.format(tools_description=tools_description, execution_history=execution_history)
 
-                plan = await get_agent_plan(system_prompt, execution_history)
+                # Get the initial plan and confirmation using the planner
+                plan = await planner.get_plan(system_prompt, execution_history)
                 
                 if plan is None:
                     logging.info("Exiting due to plan abortion or error")
                     return
+                
 
-                logging.info("Starting iteration loop...")
+                logging.info("Starting execution with confirmed plan...")
                 #logging.debug(f"Query: {query}")
                 #logging.debug(f"System prompt: {system_prompt}")
                 
