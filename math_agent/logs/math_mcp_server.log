@@ -1,29 +1,29 @@
-2025-04-15 17:55:53,346 - DEBUG - math_mcp_server:<module>:53 - This will appear in both common.log and math_mcp_server.log
-2025-04-15 17:56:03,777 - INFO - math_mcp_server:strings_to_chars_to_int:280 - CALLED: strings_to_chars_to_int(string: str) -> list[int]:
-2025-04-15 17:56:06,160 - INFO - math_mcp_server:int_list_to_exponential_sum:286 - CALLED: int_list_to_exponential_sum(int_list: list) -> float:
-2025-04-15 17:56:10,141 - INFO - math_mcp_server:open_paint:333 - Paint window found, verifying UI elements...
-2025-04-15 17:56:10,650 - INFO - math_mcp_server:open_paint:343 - Canvas element found and verified
-2025-04-15 17:56:10,653 - INFO - math_mcp_server:open_paint:344 - Canvas dimensions: (L0, T23, R0, B23)
-2025-04-15 17:56:10,657 - INFO - math_mcp_server:open_paint:360 - 
+2025-04-15 22:15:10,617 - DEBUG - math_mcp_server:<module>:53 - This will appear in both common.log and math_mcp_server.log
+2025-04-15 22:15:34,015 - INFO - math_mcp_server:strings_to_chars_to_int:280 - CALLED: strings_to_chars_to_int(string: str) -> list[int]:
+2025-04-15 22:15:46,586 - INFO - math_mcp_server:int_list_to_exponential_sum:286 - CALLED: int_list_to_exponential_sum(int_list: list) -> float:
+2025-04-15 22:16:01,873 - INFO - math_mcp_server:open_paint:333 - Paint window found, verifying UI elements...
+2025-04-15 22:16:02,379 - INFO - math_mcp_server:open_paint:343 - Canvas element found and verified
+2025-04-15 22:16:02,381 - INFO - math_mcp_server:open_paint:344 - Canvas dimensions: (L0, T34, R0, B34)
+2025-04-15 22:16:02,383 - INFO - math_mcp_server:open_paint:360 - 
 ==================== Display Configuration ====================
-2025-04-15 17:56:10,658 - INFO - math_mcp_server:open_paint:361 - Total number of monitors: 1
-2025-04-15 17:56:11,161 - INFO - math_mcp_server:open_paint:388 - Window successfully maximized
-2025-04-15 17:56:11,882 - INFO - math_mcp_server:open_paint:402 - UI elements verified and accessible
-2025-04-15 17:56:12,882 - INFO - math_mcp_server:open_paint:408 - Paint initialization complete and verified
-2025-04-15 17:56:18,547 - INFO - math_mcp_server:get_screen_canvas_dimensions:448 - 
+2025-04-15 22:16:02,383 - INFO - math_mcp_server:open_paint:361 - Total number of monitors: 1
+2025-04-15 22:16:02,893 - INFO - math_mcp_server:open_paint:388 - Window successfully maximized
+2025-04-15 22:16:03,637 - INFO - math_mcp_server:open_paint:402 - UI elements verified and accessible
+2025-04-15 22:16:04,638 - INFO - math_mcp_server:open_paint:408 - Paint initialization complete and verified
+2025-04-15 22:16:08,983 - INFO - math_mcp_server:get_screen_canvas_dimensions:448 - 
 ==================== Display Configuration ====================
-2025-04-15 17:56:18,547 - INFO - math_mcp_server:get_screen_canvas_dimensions:449 - Total number of monitors: 1
-2025-04-15 17:56:18,548 - INFO - math_mcp_server:get_screen_canvas_dimensions:450 - Primary Monitor Resolution: 1920x1080
-2025-04-15 17:57:09,055 - INFO - math_mcp_server:draw_rectangle:486 - Starting rectangle drawing operation from (750,600) to (1770,1211)
-2025-04-15 17:57:09,060 - INFO - math_mcp_server:draw_rectangle:493 - Setting Paint window focus
-2025-04-15 17:57:10,257 - INFO - math_mcp_server:draw_rectangle:499 - Paint window rectangle: (-8, -8, 1928, 1040)
-2025-04-15 17:57:10,258 - INFO - math_mcp_server:draw_rectangle:512 - Clicking rectangle tool at (805, 130)
-2025-04-15 17:57:12,415 - INFO - math_mcp_server:draw_rectangle:532 - Rectangle drawing completed
-2025-04-15 17:57:16,715 - INFO - math_mcp_server:add_text_in_paint:575 - Expected: Starting text addition operation: '7.59982224609308e+33' at (770, 700) with box size (980, 100)
-2025-04-15 17:57:16,715 - INFO - math_mcp_server:add_text_in_paint:588 - Actual: Starting text addition operation: '7.59982224609308e+33' at (770, 700) with box size (980, 100)
-2025-04-15 17:57:17,929 - INFO - math_mcp_server:add_text_in_paint:600 - Paint window rectangle: (-8, -8, 1928, 1040)
-2025-04-15 17:57:17,929 - INFO - math_mcp_server:add_text_in_paint:606 - Switching to selection tool
-2025-04-15 17:57:18,446 - INFO - math_mcp_server:add_text_in_paint:611 - Selecting Text tool
-2025-04-15 17:57:20,591 - INFO - math_mcp_server:add_text_in_paint:621 - Creating text box
-2025-04-15 17:57:24,012 - INFO - math_mcp_server:add_text_in_paint:647 - Typing text: 7.59982224609308e+33
-2025-04-15 17:57:27,975 - INFO - math_mcp_server:add_text_in_paint:665 - Text addition completed
+2025-04-15 22:16:08,983 - INFO - math_mcp_server:get_screen_canvas_dimensions:449 - Total number of monitors: 1
+2025-04-15 22:16:08,984 - INFO - math_mcp_server:get_screen_canvas_dimensions:450 - Primary Monitor Resolution: 2496x1664
+2025-04-15 22:16:15,473 - INFO - math_mcp_server:draw_rectangle:486 - Starting rectangle drawing operation from (745,594) to (1765,1216)
+2025-04-15 22:16:15,542 - INFO - math_mcp_server:draw_rectangle:493 - Setting Paint window focus
+2025-04-15 22:16:16,732 - INFO - math_mcp_server:draw_rectangle:499 - Paint window rectangle: (-11, -11, 2507, 1603)
+2025-04-15 22:16:16,733 - INFO - math_mcp_server:draw_rectangle:512 - Clicking rectangle tool at (805, 130)
+2025-04-15 22:16:18,892 - INFO - math_mcp_server:draw_rectangle:532 - Rectangle drawing completed
+2025-04-15 22:16:24,885 - INFO - math_mcp_server:add_text_in_paint:575 - Expected: Starting text addition operation: 'Sum of exponentials: 7.59982224609308e+33' at (750, 600) with box size (1000, 600)
+2025-04-15 22:16:24,886 - INFO - math_mcp_server:add_text_in_paint:588 - Actual: Starting text addition operation: 'Sum of exponentials: 7.59982224609308e+33' at (750, 600) with box size (1000, 600)
+2025-04-15 22:16:26,164 - INFO - math_mcp_server:add_text_in_paint:600 - Paint window rectangle: (-11, -11, 2507, 1603)
+2025-04-15 22:16:26,165 - INFO - math_mcp_server:add_text_in_paint:606 - Switching to selection tool
+2025-04-15 22:16:26,687 - INFO - math_mcp_server:add_text_in_paint:611 - Selecting Text tool
+2025-04-15 22:16:28,837 - INFO - math_mcp_server:add_text_in_paint:621 - Creating text box
+2025-04-15 22:16:32,270 - INFO - math_mcp_server:add_text_in_paint:647 - Typing text: Sum of exponentials: 7.59982224609308e+33
+2025-04-15 22:16:38,867 - INFO - math_mcp_server:add_text_in_paint:665 - Text addition completed

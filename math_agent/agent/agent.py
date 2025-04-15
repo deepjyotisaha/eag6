@@ -22,9 +22,8 @@ from config.log_config import setup_logging
 from llm.llm import LLMManager
 from planner.planner import Planner
 from action.action import ActionExecutor
-from memory.working_memory import ExecutionHistory  # Updated import path
+from memory.working_memory import ExecutionHistory
 from desicion.desicion import DecisionMaker
-
 
 
 # Get logger for this module
@@ -93,132 +92,46 @@ def _create_tools_description(tools: List) -> str:
     except Exception as e:
         logging.error(f"Error creating tools description: {e}")
         return "Error loading tools"
-
-
-async def _make_next_step_decision(llm_manager: LLMManager, system_prompt: str, tools: List) -> Optional[Dict]:
-    """
-    Make a decision about the next step to execute using LLM and user confirmation.
     
-    Args:
-        llm_manager: LLM manager instance
-        system_prompt: Current system prompt
-        tools: Available tools list
+
+async def _get_tools(math_session: ClientSession, gmail_session: ClientSession) -> List:
+    """
+    Retrieve and combine tools from math and gmail sessions.
         
+    Args:
+        math_session: Math server client session
+        gmail_session: Gmail server client session
+            
     Returns:
-        Optional[Dict]: Processed decision with tool execution info, or None if should terminate
+        List: Combined list of tools from both servers
     """
     try:
-        logging.info("Determining next execution step...")
+        # Get math tools
+        logging.info("Requesting tool list...")
+        tools_result = await math_session.list_tools()
+        math_tools = tools_result.tools
+        logging.info(f"Math server tools: {len(math_tools)}")
+        for tool in math_tools:
+            tool.server_session = math_session
+        logging.info(f"Successfully retrieved {len(math_tools)} math tools")
         
-        # Get LLM's decision with timeout
-        response = await llm_manager.generate_with_timeout(system_prompt)
-        response_text = response.text.strip()
-        logging.info(f"LLM Response: {response_text}")
-        
-        # Clean and parse response
-        cleaned_response = response_text
-        if cleaned_response.startswith("```json"):
-            cleaned_response = cleaned_response[7:]
-        if cleaned_response.endswith("```"):
-            cleaned_response = cleaned_response[:-3]
-        cleaned_response = cleaned_response.strip()
-        
-        response_json = json.loads(cleaned_response)
-        response_type = response_json.get("response_type")
-        
-        # Handle different response types
-        if response_type == "function_call":
-            function_info = response_json.get("function", {})
-            func_name = function_info.get("name")
-            reasoning = function_info.get("reasoning", "No reasoning provided")
-            
-            # Verify tool exists
-            tool = next((t for t in tools if t.name == func_name), None)
-            if not tool:
-                UserInteraction.report_error(
-                    f"Unknown tool: {func_name}",
-                    "Tool Error",
-                    "The selected tool does not exist"
-                )
-                return None
-            
-            # Show decision to user and get confirmation
-            decision_msg = (
-                f"Proposed Next Step:\n"
-                f"Tool: {func_name}\n"
-                f"Parameters: {function_info.get('parameters', {})}\n"
-                f"Reasoning: {reasoning}"
-            )
-            
-            choice, feedback = UserInteraction.get_confirmation(
-                decision_msg,
-                "Do you want to proceed with this step?"
-            )
-            
-            if choice == "confirm":
-                logging.info("User confirmed decision")
-                return {
-                    "type": "function_call",
-                    "tool": tool,
-                    "function_info": function_info
-                }
-            elif choice == "redo":
-                logging.info(f"User requested revision with feedback: {feedback}")
-                # Add feedback to prompt and try again
-                revised_prompt = f"{system_prompt}\n\nRevision Request Feedback: {feedback}\n\n Determine the next step to execute considering the feedback"
-                return await _make_next_step_decision(llm_manager, revised_prompt, tools)
-            else:  # abort
-                logging.info("User aborted execution")
-                return None
-                
-        elif response_type == "final_answer":
-            # Show final answer to user for confirmation
-            final_msg = (
-                f"Execution Complete\n"
-                f"Result: {response_json.get('result')}\n"
-                f"Summary: {response_json.get('summary')}"
-            )
-            
-            choice, feedback = UserInteraction.get_confirmation(
-                final_msg,
-                "Is this final result acceptable?"
-            )
-            
-            if choice == "confirm":
-                return {
-                    "type": "final_answer",
-                    "response": response_json
-                }
-            elif choice == "redo":
-                # Continue execution with feedback
-                revised_prompt = f"{system_prompt}\n\nFinal Result Feedback: {feedback}"
-                return await _make_next_step_decision(llm_manager, revised_prompt, tools)
-            else:
-                return None
-                
-        else:
-            UserInteraction.report_error(
-                "Invalid response type",
-                "Decision Error",
-                f"Unexpected response type: {response_type}"
-            )
-            return None
-            
-    except json.JSONDecodeError as e:
-        UserInteraction.report_error(
-            "Failed to parse LLM response",
-            "Parse Error",
-            str(e)
-        )
-        return None
-    except Exception as e:
-        UserInteraction.report_error(
-            "Error in decision making",
-            "Decision Error",
-            str(e)
-        )
-        return None
+        # Get gmail tools
+        tools_result = await gmail_session.list_tools()
+        gmail_tools = tools_result.tools
+        logging.info(f"Gmail server tools: {len(gmail_tools)}")
+        for tool in gmail_tools:
+            tool.server_session = gmail_session
+        logging.info(f"Successfully retrieved {len(gmail_tools)} gmail tools")
 
+        # Combine tools
+        tools = math_tools + gmail_tools
+        logging.info(f"Combined tools: {len(tools)}")
+        
+        return tools
+        
+    except Exception as e:
+        logging.error(f"Error getting tools: {e}")
+        raise
 
 async def agent_main():
     reset_state()  # Reset at the start of main
@@ -236,14 +149,19 @@ async def agent_main():
         # Initialize LLM
         llm_manager = LLMManager()
         llm_manager.initialize()
+
         # Initialize planner with generate_with_timeout function
         planner = Planner(llm_manager)
+
+        # Initialize action executor
         action_executor = ActionExecutor()
+        
         # Initialize decision maker
         decision_maker = DecisionMaker()
 
         # Create a single MCP server connection
         logging.info("Establishing connection to MCP server...")
+
         
         math_server_params = StdioServerParameters(
             command=MCP_SERVER_CONFIG["math_server"]["command"],
@@ -259,7 +177,7 @@ async def agent_main():
             ]
         )
 
-
+        # Create MCP server connection
         async with stdio_client(math_server_params) as (math_read, math_write), \
             stdio_client(gmail_server_params) as (gmail_read, gmail_write):
             logging.info("Connection established, creating session...")
@@ -269,45 +187,26 @@ async def agent_main():
                 await math_session.initialize()
                 await gmail_session.initialize()
                 time.sleep(0.5)
+            
+                # Get tools using the new helper function
+                try:
+                    tools = await _get_tools(math_session, gmail_session)
+                except Exception as e:
+                    logging.error(f"Error getting tools: {e}")
+                    raise
                 
-                # Get available tools
-                logging.info("Requesting tool list...")
-                tools_result = await math_session.list_tools()
-                math_tools = tools_result.tools
-                logging.info(f"Math server tools: {len(math_tools)}")
-                for tool in math_tools:
-                    tool.server_session = math_session
-                logging.info(f"Successfully retrieved {len(math_tools)} math tools")
-              
-
-                tools_result = await gmail_session.list_tools()
-                gmail_tools = tools_result.tools
-                logging.info(f"Gmail server tools: {len(gmail_tools)}")
-                for tool in gmail_tools:
-                    tool.server_session = gmail_session
-                logging.info(f"Successfully retrieved {len(gmail_tools)} gmail tools")
-
-                # Combine tools (extend the list instead of adding sessions)
-                tools = math_tools + gmail_tools
-        
-                logging.info(f"Combined tools: {len(tools)}")
-               
                 # Create system prompt with available tools
                 logging.info("Creating system prompt...")
                 logging.info(f"Number of tools: {len(tools)}")
                 
                 try:
-                    # First, let's inspect what a tool object looks like
                     if tools:
-                        #print(f"First tool properties: {dir(tools[0])}")
-                        #print(f"First tool example: {tools[0]}")                    
-                        tools_description = []
                         tools_description = _create_tools_description(tools)
                 except Exception as e:
                     logging.error(f"Error creating tools description: {e}")
                     tools_description = "Error loading tools"
-
                 
+                # Create system prompt
                 logging.info("Created system prompt...")
                 
                 execution_history.user_query = Config.DEFAULT_QUERIES["ascii_sum"]
