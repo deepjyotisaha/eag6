@@ -13,6 +13,34 @@ class ActionExecutor:
         self.logger = logging.getLogger(__name__)
 
     @staticmethod
+    def _convert_parameter(param_name: str, value: any, param_type: str) -> any:
+        """
+        Convert a parameter value to the specified type.
+        """
+        try:
+            if param_type == 'integer':
+                return int(value)
+            elif param_type == 'number':
+                return float(value)
+            elif param_type == 'array':
+                if isinstance(value, str):
+                    value = value.strip('[]').split(',')
+                    return [int(x.strip()) for x in value]
+                elif isinstance(value, list):
+                    return value[0] if len(value) > 0 and isinstance(value[0], list) else value
+                else:
+                    raise ValueError(f"Invalid array parameter: {value}")
+            else:
+                return str(value)
+        except (ValueError, TypeError) as e:
+            UserInteraction.report_error(
+                f"Parameter conversion error for {param_name}",
+                "Type Error",
+                f"Failed to convert value '{value}' to type {param_type}: {str(e)}"
+            )
+            raise
+
+    @staticmethod
     async def execute_tool(tool, function_info: Dict, tools: List, execution_history: ExecutionHistory) -> Optional[str]:
         """
         Execute a tool and update execution history with the results.
@@ -68,26 +96,8 @@ class ActionExecutor:
 
                 # Convert parameter to correct type
                 try:
-                    if param_type == 'integer':
-                        arguments[param_name] = int(value)
-                    elif param_type == 'number':
-                        arguments[param_name] = float(value)
-                    elif param_type == 'array':
-                        if isinstance(value, str):
-                            value = value.strip('[]').split(',')
-                            arguments[param_name] = [int(x.strip()) for x in value]
-                        elif isinstance(value, list):
-                            arguments[param_name] = value[0] if len(value) > 0 and isinstance(value[0], list) else value
-                        else:
-                            raise ValueError(f"Invalid array parameter: {value}")
-                    else:
-                        arguments[param_name] = str(value)
-                except (ValueError, TypeError) as e:
-                    UserInteraction.report_error(
-                        f"Parameter conversion error for {param_name}",
-                        "Type Error",
-                        f"Failed to convert value '{value}' to type {param_type}: {str(e)}"
-                    )
+                    arguments[param_name] = ActionExecutor._convert_parameter(param_name, value, param_type)
+                except ValueError as e:
                     raise
 
             # Execute the tool
