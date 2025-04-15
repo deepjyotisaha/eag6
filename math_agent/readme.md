@@ -14,6 +14,7 @@ This project implements a math agent that can solve mathematical problems, displ
 ##TODO
 
 1. Add decision.py
+2. Add inclusion of ambiguous handling
 2. Add memory.pu
 3. Add frontend.py
 4. Add proper user interaction
