@@ -23,6 +23,7 @@ from llm.llm import LLMManager
 from planner.planner import Planner
 from action.action import ActionExecutor
 from memory.working_memory import ExecutionHistory  # Updated import path
+from desicion.desicion import DecisionMaker
 
 
 
@@ -235,11 +236,11 @@ async def agent_main():
         # Initialize LLM
         llm_manager = LLMManager()
         llm_manager.initialize()
-
         # Initialize planner with generate_with_timeout function
         planner = Planner(llm_manager)
-
         action_executor = ActionExecutor()
+        # Initialize decision maker
+        decision_maker = DecisionMaker()
 
         # Create a single MCP server connection
         logging.info("Establishing connection to MCP server...")
@@ -312,7 +313,7 @@ async def agent_main():
                 execution_history.user_query = Config.DEFAULT_QUERIES["ascii_sum"]
 
                 system_prompt = Config.SYSTEM_PROMPT.format(tools_description=tools_description, execution_history=execution_history)
-                
+
                 # Get the initial plan and confirmation using the planner
                 plan = await planner.get_plan(system_prompt, execution_history)
                 
@@ -333,7 +334,12 @@ async def agent_main():
                         execution_history=execution_history
                     )
                     
-                    decision = await _make_next_step_decision(llm_manager, system_prompt, tools)
+                    decision = await decision_maker.make_next_step_decision(
+                        llm_manager, 
+                        system_prompt, 
+                        tools, 
+                        execution_history
+                    )
                     if not decision:
                         break
                         
