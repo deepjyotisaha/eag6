@@ -90,7 +90,7 @@ Available tools:
 You must respond with EXACTLY ONE response_type per response (no additional text):
 Example Plan Response:
 {{
-    "response_type": "plan",
+    "llm_response_type": "plan",
     "steps": [
         {{
             "step_number": 1,
@@ -109,7 +109,7 @@ Example Plan Response:
 
 Example Function Call:
 {{
-    "response_type": "function_call",
+    "llm_response_type": "function_call",
     "function": {{
         "name": "strings_to_chars_to_int",
         "parameters": {{
@@ -122,7 +122,7 @@ Example Function Call:
 
 Example Error Handling Function Call:
 {{
-    "response_type": "function_call",
+    "llm_response_type": "function_call",
     "function": {{
         "name": "clarify",
         "parameters": {{
@@ -137,7 +137,7 @@ Example Error Handling Function Call:
 
 Example Final Answer:
 {{
-    "response_type": "final_answer",
+    "llm_response_type": "final_answer",
     "result": "42",
     "summary": "Completed all calculations and displayed result"
 }}

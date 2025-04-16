@@ -48,7 +48,7 @@ class Planner:
             try:
                 # Parse the response to get the plan
                 plan_data = json.loads(response_text)
-                if plan_data.get("response_type") != "plan":
+                if plan_data.get("llm_response_type") != "plan":
                     raise ValueError("Expected plan response type")
                 
                 plan_steps = plan_data.get("steps", [])

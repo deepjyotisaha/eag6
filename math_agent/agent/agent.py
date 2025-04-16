@@ -232,6 +232,15 @@ async def agent_main():
                         tools_description=tools_description, 
                         execution_history=execution_history
                     )
+
+                    # Print summary view
+                    #execution_history.print_status()
+
+                    # Print detailed view
+                    #execution_history.print_status(detailed=True)
+
+                    # Print JSON view
+                    #execution_history.print_json()
                     
                     decision = await decision_maker.make_next_step_decision(
                         llm_manager, 
@@ -241,8 +250,10 @@ async def agent_main():
                     )
                     if not decision:
                         break
+
+                    logging.info(f"Decision: {decision}")
                         
-                    if decision["type"] == "function_call":
+                    if decision["step_type"] == "function_call":
                         # Execute tool
                         result = await action_executor.execute_tool(
                             decision["tool"], 
@@ -254,7 +265,7 @@ async def agent_main():
                             break
                         iteration_response.append(result)
                             
-                    elif decision["type"] == "final_answer":
+                    elif decision["step_type"] == "final_answer":
                         logging.info("\n=== Agent Execution Complete ===")
                         execution_history.final_answer = decision["response"]
                         break

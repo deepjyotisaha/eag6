@@ -54,6 +54,7 @@ class LLMManager:
         try:
             # Convert the synchronous generate_content call to run in a thread
             loop = asyncio.get_event_loop()
+            #self.logger.info(f"Prompt: {prompt}")
             response = await asyncio.wait_for(
                 loop.run_in_executor(
                     None, 
@@ -92,7 +93,7 @@ class LLMManager:
             response_data = json.loads(cleaned_text)
             
             # Check response type if specified
-            if expected_type and response_data.get("response_type") != expected_type:
+            if expected_type and response_data.get("llm_response_type") != expected_type:
                 self.logger.warning(f"Unexpected response type. Expected {expected_type}, got {response_data.get('response_type')}")
                 return False
                 
