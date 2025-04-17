@@ -136,10 +136,10 @@ async def _get_tools(math_session: ClientSession, gmail_session: ClientSession) 
         raise
 
 # In your agent or main code:
-async def setup_user_memory(user_memory: UserMemory, system_prompt: str, user_query: str):
+async def setup_user_memory(user_memory: UserMemory, general_instructions: str, user_query: str):
     
     # Gather initial facts
-    await user_memory.gather_initial_facts_for_query(user_query, system_prompt)
+    await user_memory.gather_initial_facts_for_query(user_query, general_instructions)
         
     # Recall information
     result = await user_memory.recall_query_specific_facts(
@@ -232,9 +232,10 @@ async def agent_main():
                 # Create system prompt
                 logging.info("Created system prompt...")
                 
-                execution_history.user_query = Config.DEFAULT_QUERIES["ascii_sum"]
+                user_query = Config.DEFAULT_QUERIES["ascii_sum"]
+                execution_history.user_query = user_query
 
-                system_prompt = Config.GENERAL_INSTRUCTIONS.format(user_memory=user_memory, tools_description=tools_description, execution_history=execution_history)
+                general_instructions = Config.GENERAL_INSTRUCTIONS.format(tools_description=tools_description)
 
                 # Show startup information
                 UserInteraction.show_information(
@@ -243,8 +244,8 @@ async def agent_main():
 
                 await setup_user_memory(
                     user_memory,
-                    system_prompt,
-                    execution_history.user_query
+                    general_instructions,
+                    user_query
                 )
 
                 user_memory.print_status()
@@ -253,12 +254,11 @@ async def agent_main():
                 UserInteraction.show_information(
                     "Initial facts gathered, now analyzing intent...",
                 )
-                
 
                 # In your main execution flow or planner
                 intent_analyzer = IntentAnalyzer(llm_manager, user_memory)
                 intent_analysis = await intent_analyzer.analyze_intent(
-                    query=execution_history.user_query
+                    query=user_query
                 )
 
                 intent_analyzer.print_status(intent_analysis)
@@ -275,7 +275,13 @@ async def agent_main():
                 )
 
                 # Get the initial plan and confirmation using the planner
-                plan = await planner.get_plan(system_prompt, execution_history)
+                plan = await planner.get_plan(
+                    llm_manager,
+                    tools,
+                    general_instructions,
+                    intent_analysis,
+                    user_memory,
+                    execution_history)
                 
                 if plan is None:
                     logging.info("Exiting due to plan abortion or error")
@@ -287,11 +293,6 @@ async def agent_main():
                 
                 while iteration < max_iterations:
                     logging.info(f"\n--- Iteration {iteration + 1} ---")
-                    
-                    # Get next step decision
-                    general_instructions = Config.GENERAL_INSTRUCTIONS.format(
-                        tools_description=tools_description
-                    )
 
                     # Print summary view
                     #execution_history.print_status()

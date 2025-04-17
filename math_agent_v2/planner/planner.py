@@ -1,8 +1,11 @@
 import json
 import logging
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from userinteraction.console_ui import UserInteraction
 from llm.llm import LLMManager
+from memory.user_memory import UserMemory
+from memory.working_memory import ExecutionHistory
+
 
 class Planner:
     def __init__(self, llm_manager: LLMManager):
@@ -15,7 +18,16 @@ class Planner:
         self.llm_manager = llm_manager
         self.logger = logging.getLogger(__name__)
 
-    async def get_plan(self, general_instructions: str, execution_history) -> Optional[Dict]:
+
+    async def get_plan(self, 
+                       llm_manager: LLMManager, 
+                       tools: List, 
+                       general_instructions: str, 
+                       intent_analysis: Dict, 
+                       user_memory: UserMemory, 
+                       execution_history: ExecutionHistory,
+                       revised_prompt: str = None) -> Optional[Dict]:
+
         """
         Get the initial plan from LLM and seek user confirmation
         
@@ -34,7 +46,13 @@ class Planner:
             # Generate plan from LLM
             plan_prompt = f"""
             
-            Refer the GENERAL INSTRUCTIONS here to determine the plan: {general_instructions}
+            The following information is available to you:
+            
+            USER MEMORY: {user_memory.facts}
+
+            INTENT ANALYSIS: {intent_analysis}
+              
+            GENERAL INSTRUCTIONS: {general_instructions}
             
             Please generate a plan for the following query: {execution_history.user_query} 
 
@@ -58,6 +76,10 @@ class Planner:
             }}
             Your response should have ONLY JSON object.
             """
+
+            if revised_prompt:
+                plan_prompt = revised_prompt
+
             response = await self.llm_manager.generate_with_timeout(plan_prompt)
             response_text = response.text
 
@@ -101,8 +123,8 @@ class Planner:
                 elif choice == "redo":
                     self.logger.info(f"User requested plan revision with feedback: {feedback}")
                     # Add feedback to prompt and try again
-                    revised_prompt = f"{plan_prompt}\n\nRevision Request Feedback: {feedback}\n\nYou need to consider the revision request feedback while generating the plan."
-                    return await self.get_plan(revised_prompt, execution_history)
+                    revised_prompt = f"{plan_prompt}\n\nRevision Request Feedback: {feedback}\n\n Consider the revision request feedback along with the general instructions, intent analysis and user memory and generate a new plan."
+                    return await self.get_plan(llm_manager, tools, general_instructions, intent_analysis, user_memory, execution_history, revised_prompt)
                 else:  # abort
                     self.logger.info("Plan aborted by user")
                     UserInteraction.show_information("Operation aborted by user", "Abort")

@@ -374,7 +374,7 @@ class UserMemory:
                 str(e)
             )
 
-    async def gather_initial_facts_for_query(self, query: str, system_prompt: str) -> None:
+    async def gather_initial_facts_for_query(self, query: str, general_instructions: str) -> None:
         """
         Use LLM to generate relevant questions based on the query and system prompt,
         then gather and store answers.
@@ -390,14 +390,22 @@ class UserMemory:
 
         # Create prompt for question generation
         question_prompt = f"""
-        Given the following query and system context, generate 5 relevant questions
+
+        Query: {query}
+
+        General Instructions: {general_instructions}
+
+        Given the above query and general information, generate 5 relevant questions
         that would help better understand the user's needs and preferences for this specific task.
 
-        Your intent is to gather information that will help you better understand the user's needs and preferences for this specific task and help you plan the needed steps to execute the task. Pay attention to the ambiguity of the query and the potential multiple interpretations of the query, and gaps information available in the system context.
+        Your intent is to gather information that will help you:
+         1. Better understand the user's needs and preferences for this specific task
+         2. Help you plan the needed steps to execute the task. 
+         3. Help you determine which tools to use and how to use them.
+         4. Help you determine the level of detail in the solution.
+         5. Help you determine the preferred format of results.
         
-        Query: {query}
-        
-        System Context: {system_prompt}
+        Pay attention to the ambiguity of the query and the potential multiple interpretations of the query, and gaps information available in the system context.
         
         Generate questions that focus on:
         1. User's specific preferences for this type of task
@@ -405,6 +413,8 @@ class UserMemory:
         3. Desired level of detail in the solution
         4. Any constraints or special requirements
         5. Preferred format of results
+
+        These questions are limited and should be used to gather information that will help you plan the needed steps to execute the task. Dont waste time on gathering information that is not relevant to the task or already available in the general instructions, intent analysis or user query.
         
         Respond in the following JSON format:
         {{
