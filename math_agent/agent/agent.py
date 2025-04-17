@@ -24,6 +24,7 @@ from planner.planner import Planner
 from action.action import ActionExecutor
 from memory.working_memory import ExecutionHistory
 from desicion.desicion import DecisionMaker
+from memory.user_memory import UserMemory
 
 
 # Get logger for this module
@@ -133,6 +134,32 @@ async def _get_tools(math_session: ClientSession, gmail_session: ClientSession) 
         logging.error(f"Error getting tools: {e}")
         raise
 
+# In your agent or main code:
+async def setup_user_memory(user_memory: UserMemory, system_prompt: str, user_query: str):
+    
+    # Gather initial facts
+    await user_memory.gather_initial_facts_for_query(user_query, system_prompt)
+    
+    # Add contextual fact during execution
+    #await user_memory.add_contextual_fact(
+    #    context="User is solving a complex equation",
+    #    question="Would you like to see intermediate steps in the solution?"
+    #)
+    
+    # Recall information
+    result = await user_memory.recall_query_specific_facts(
+        "What does the user want to do? Include their preferences and requirements for the task, and any pontential ambiguities that were clarified."
+    )
+    if result:
+        print(f"Recall result: {json.dumps(result, indent=2)}")
+    
+    # Display current memory contents
+    user_memory.print_facts(detailed=True)
+    
+    # Save memory for later
+    #user_memory.save_to_file("user_memory.json")
+
+
 async def agent_main():
     reset_state()  # Reset at the start of main
     logging.info("Starting main execution...")
@@ -143,12 +170,13 @@ async def agent_main():
             "Startup"
         )
 
-        # Initialize execution history
-        execution_history = ExecutionHistory()
-        
         # Initialize LLM
         llm_manager = LLMManager()
         llm_manager.initialize()
+
+        # Initialize execution history
+        execution_history = ExecutionHistory()
+        user_memory = UserMemory(llm_manager)
 
         # Initialize planner with generate_with_timeout function
         planner = Planner(llm_manager)
@@ -212,6 +240,22 @@ async def agent_main():
                 execution_history.user_query = Config.DEFAULT_QUERIES["ascii_sum"]
 
                 system_prompt = Config.SYSTEM_PROMPT.format(tools_description=tools_description, execution_history=execution_history)
+
+                # Show startup information
+                UserInteraction.show_information(
+                    "Gathering initial facts...",
+                )
+
+                await setup_user_memory(
+                    user_memory,
+                    system_prompt,
+                    execution_history.user_query
+                )
+
+                # Show startup information
+                UserInteraction.show_information(
+                    "Initial facts gathered, now generating plan...",
+                )
 
                 # Get the initial plan and confirmation using the planner
                 plan = await planner.get_plan(system_prompt, execution_history)

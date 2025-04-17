@@ -1,0 +1,68 @@
+[
+  {
+    "type": "personal",
+    "question_id": "name",
+    "question": "What is your name?",
+    "response": "deep",
+    "timestamp": "2025-04-17 17:58:05.416704",
+    "fact_id": 1
+  },
+  {
+    "type": "accessibility",
+    "question_id": "visual_preferences",
+    "question": "Do you have any specific visual preferences (e.g., high contrast, large text)?",
+    "response": "high contrast",
+    "timestamp": "2025-04-17 18:00:04.671854",
+    "fact_id": 2
+  },
+  {
+    "type": "expertise",
+    "question_id": "math_experience",
+    "question": "How would you rate your mathematics experience (beginner/intermediate/advanced)?",
+    "response": "beginner",
+    "timestamp": "2025-04-17 18:00:09.616643",
+    "fact_id": 3
+  },
+  {
+    "type": "preference",
+    "question_id": "preferred_explanation_style",
+    "question": "How detailed would you like explanations to be (brief/moderate/detailed)?",
+    "response": "breif",
+    "timestamp": "2025-04-17 18:00:12.146079",
+    "fact_id": 4
+  },
+  {
+    "type": "accessibility",
+    "question_id": "special_requirements",
+    "question": "Do you have any special requirements or preferences we should know about?",
+    "response": "I prefer circles",
+    "timestamp": "2025-04-17 18:00:19.938048",
+    "fact_id": 5
+  },
+  {
+    "type": "contextual",
+    "context": "User is solving a complex equation",
+    "question": "Would you like to see intermediate steps in the solution?",
+    "response": "yes",
+    "timestamp": "2025-04-17 18:00:24.222638",
+    "fact_id": 6
+  },
+  {
+    "type": "recall_attempt",
+    "query": "What is the user's preferred level of detail in mathematical explanations?",
+    "result": {
+      "relevant_facts": [
+        {
+          "fact_id": 4,
+          "relevance": "This fact directly answers the question about the preferred level of detail in explanations."
+        }
+      ],
+      "interpretation": "The user prefers brief explanations.",
+      "confidence": "high",
+      "response": "The user prefers brief explanations.",
+      "reasoning": "Fact 4 states that the user's preferred level of detail in explanations is 'brief'."
+    },
+    "timestamp": "2025-04-17 18:00:25.552242",
+    "fact_id": 7
+  }
+]
