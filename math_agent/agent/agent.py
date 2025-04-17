@@ -253,6 +253,8 @@ async def agent_main():
                     execution_history.user_query
                 )
 
+                user_memory.print_status()
+
                 # Show startup information
                 UserInteraction.show_information(
                     "Initial facts gathered, now analyzing intent...",
@@ -266,11 +268,13 @@ async def agent_main():
                     system_prompt="Your system prompt here"
                 )
 
+                intent_analyzer.print_status(intent_analysis)
+
                 # Use the analysis for planning
-                UserInteraction.show_information(f"Primary Intent: {intent_analysis['primary_intent']}")
-                UserInteraction.show_information(f"Required Knowledge: {intent_analysis['required_knowledge']}")
-                UserInteraction.show_information(f"Execution Hints: {intent_analysis['execution_hints']}")
-                UserInteraction.show_information(f"Complete Intent Analysis: {intent_analysis}")
+                #UserInteraction.show_information(f"Primary Intent: {intent_analysis['primary_intent']}")
+                #UserInteraction.show_information(f"Required Knowledge: {intent_analysis['required_knowledge']}")
+                #UserInteraction.show_information(f"Execution Hints: {intent_analysis['execution_hints']}")
+                #UserInteraction.show_information(f"Complete Intent Analysis: {intent_analysis}")
 
                 # Show startup information
                 UserInteraction.show_information(

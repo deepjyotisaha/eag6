@@ -551,4 +551,123 @@ class UserMemory:
                 str(e)
             )
             return None
+        
+    def print_status(self) -> None:
+        """
+        Print a formatted status of the user memory, similar to working memory's style.
+        """
+        from rich.console import Console
+        from rich.panel import Panel
+        from rich.table import Table
+        from rich.text import Text
+        from datetime import datetime
 
+        console = Console()
+
+        # Create header
+        header = Panel(
+            "[bold blue]User Memory Status Overview[/bold blue]",
+            style="bold white on blue"
+        )
+        console.print(header)
+
+        # Create facts summary table
+        facts_table = Table(show_header=True, title="Facts Summary")
+        facts_table.add_column("Category", style="cyan")
+        facts_table.add_column("Count", justify="right", style="green")
+        facts_table.add_column("Latest Update", style="yellow")
+
+        # Group facts by type
+        fact_types = {}
+        for fact in self.facts:
+            fact_type = fact.get('type', 'unknown')
+            if fact_type not in fact_types:
+                fact_types[fact_type] = {
+                    'count': 0,
+                    'latest': None
+                }
+            fact_types[fact_type]['count'] += 1
+            
+            timestamp = fact.get('timestamp')
+            if timestamp:
+                if isinstance(timestamp, str):
+                    try:
+                        timestamp = datetime.fromisoformat(timestamp)
+                    except ValueError:
+                        timestamp = None
+                if timestamp and (not fact_types[fact_type]['latest'] or 
+                                timestamp > fact_types[fact_type]['latest']):
+                    fact_types[fact_type]['latest'] = timestamp
+
+        # Add rows to facts table
+        for fact_type, data in fact_types.items():
+            latest_str = data['latest'].strftime("%Y-%m-%d %H:%M:%S") if data['latest'] else "N/A"
+            facts_table.add_row(fact_type, str(data['count']), latest_str)
+
+        console.print(facts_table)
+
+        # Print recent facts
+        recent_facts_table = Table(
+            show_header=True,
+            title="Recent Facts (Last 5)",
+            title_style="bold magenta"
+        )
+        recent_facts_table.add_column("Type", style="cyan")
+        recent_facts_table.add_column("Content", style="green")
+        recent_facts_table.add_column("Timestamp", style="yellow")
+
+        # Sort facts by timestamp and get last 5
+        sorted_facts = sorted(
+            [f for f in self.facts if 'timestamp' in f],
+            key=lambda x: (
+                datetime.fromisoformat(x['timestamp'])
+                if isinstance(x['timestamp'], str)
+                else x['timestamp']
+            ),
+            reverse=True
+        )[:5]
+
+        for fact in sorted_facts:
+            content = self._format_fact_content(fact)
+            timestamp = (
+                datetime.fromisoformat(fact['timestamp']).strftime("%Y-%m-%d %H:%M:%S")
+                if isinstance(fact['timestamp'], str)
+                else fact['timestamp'].strftime("%Y-%m-%d %H:%M:%S")
+            )
+            recent_facts_table.add_row(fact.get('type', 'unknown'), content, timestamp)
+
+        console.print("\n")
+        console.print(recent_facts_table)
+
+        # Print memory statistics
+        stats_panel = Panel(
+            self._get_memory_stats(),
+            title="Memory Statistics",
+            style="bold white"
+        )
+        console.print("\n")
+        console.print(stats_panel)
+
+    def _format_fact_content(self, fact: dict) -> str:
+        """Format fact content for display."""
+        if fact.get('type') == 'preference':
+            return f"{fact.get('category', 'N/A')}: {fact.get('value', 'N/A')}"
+        elif fact.get('type') == 'query_specific':
+            return f"Q: {fact.get('question', 'N/A')[:30]}... -> A: {fact.get('response', 'N/A')[:30]}..."
+        elif fact.get('type') == 'intent_analysis':
+            intent = fact.get('analysis', {}).get('primary_intent', {})
+            return f"Intent: {intent.get('action', 'N/A')} -> {intent.get('objective', 'N/A')}"
+        return str(fact.get('response', str(fact)))[:60] + "..."
+
+    def _get_memory_stats(self) -> str:
+        """Generate memory statistics string."""
+        total_facts = len(self.facts)
+        memory_size = len(str(self.facts))
+        fact_types = len(set(f.get('type', 'unknown') for f in self.facts))
+        
+        stats = [
+            f"Total Facts: {total_facts}",
+            f"Unique Fact Types: {fact_types}",
+            f"Memory Size: {memory_size/1024:.2f}KB"
+        ]
+        return "\n".join(stats)

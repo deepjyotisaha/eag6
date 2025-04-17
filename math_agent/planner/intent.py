@@ -285,3 +285,116 @@ class IntentAnalyzer:
             "output_requirements": {"format": "standard", "level_of_detail": "basic"}
         }
         return defaults.get(field, {})
+    
+    def print_status(self, intent_analysis: Dict) -> None:
+        """
+        Print a formatted status of the intent analysis.
+        """
+        from rich.console import Console
+        from rich.panel import Panel
+        from rich.table import Table
+        from rich.text import Text
+
+        console = Console()
+
+        # Create header
+        header = Panel(
+            "[bold blue]Intent Analysis Status[/bold blue]",
+            style="bold white on blue"
+        )
+        console.print(header)
+
+        # Primary Intent Table
+        primary_intent = intent_analysis.get('primary_intent', {})
+        primary_table = Table(show_header=True, title="Primary Intent")
+        primary_table.add_column("Aspect", style="cyan")
+        primary_table.add_column("Value", style="green")
+
+        primary_table.add_row("Action", primary_intent.get('action', 'N/A'))
+        primary_table.add_row("Subject", primary_intent.get('subject', 'N/A'))
+        primary_table.add_row("Objective", primary_intent.get('objective', 'N/A'))
+
+        console.print(primary_table)
+
+        # Sub-Intents Table
+        sub_intents = intent_analysis.get('sub_intents', [])
+        if sub_intents:
+            console.print("\n")
+            sub_table = Table(show_header=True, title="Sub-Intents")
+            sub_table.add_column("Action", style="cyan")
+            sub_table.add_column("Purpose", style="green")
+            sub_table.add_column("Dependencies", style="yellow")
+
+            for sub_intent in sub_intents:
+                sub_table.add_row(
+                    sub_intent.get('action', 'N/A'),
+                    sub_intent.get('purpose', 'N/A'),
+                    ", ".join(sub_intent.get('dependencies', ['None']))
+                )
+
+            console.print(sub_table)
+
+        # Constraints and Requirements
+        constraints = intent_analysis.get('constraints', [])
+        if constraints:
+            console.print("\n")
+            const_table = Table(show_header=True, title="Constraints")
+            const_table.add_column("Type", style="cyan")
+            const_table.add_column("Description", style="green")
+            const_table.add_column("Severity", style="yellow")
+
+            for constraint in constraints:
+                const_table.add_row(
+                    constraint.get('type', 'N/A'),
+                    constraint.get('description', 'N/A'),
+                    constraint.get('severity', 'N/A')
+                )
+
+            console.print(const_table)
+
+        # Required Knowledge
+        knowledge = intent_analysis.get('required_knowledge', [])
+        if knowledge:
+            console.print("\n")
+            know_table = Table(show_header=True, title="Required Knowledge")
+            know_table.add_column("Domain", style="cyan")
+            know_table.add_column("Specifics", style="green")
+            know_table.add_column("Availability", style="yellow")
+
+            for k in knowledge:
+                know_table.add_row(
+                    k.get('domain', 'N/A'),
+                    k.get('specifics', 'N/A'),
+                    k.get('availability', 'N/A')
+                )
+
+            console.print(know_table)
+
+        # Execution Hints
+        hints = intent_analysis.get('execution_hints', {})
+        if hints:
+            console.print("\n")
+            hints_panel = Panel(
+                "\n".join([
+                    f"Suggested Approach: {hints.get('suggested_approach', 'N/A')}",
+                    f"Priority Order: {', '.join(hints.get('priority_order', ['N/A']))}",
+                    f"Critical Checkpoints: {', '.join(hints.get('critical_checkpoints', ['N/A']))}"
+                ]),
+                title="Execution Hints",
+                style="bold white"
+            )
+            console.print(hints_panel)
+
+        # Metadata
+        metadata = intent_analysis.get('metadata', {})
+        if metadata:
+            console.print("\n")
+            meta_panel = Panel(
+                "\n".join([
+                    f"Timestamp: {metadata.get('timestamp', 'N/A')}",
+                    f"Confidence Score: {metadata.get('confidence_score', 'N/A')}"
+                ]),
+                title="Analysis Metadata",
+                style="bold white"
+            )
+            console.print(meta_panel)
