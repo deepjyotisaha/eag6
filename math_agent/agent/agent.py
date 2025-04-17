@@ -25,6 +25,7 @@ from action.action import ActionExecutor
 from memory.working_memory import ExecutionHistory
 from desicion.desicion import DecisionMaker
 from memory.user_memory import UserMemory
+from planner.intent import IntentAnalyzer
 
 
 # Get logger for this module
@@ -254,7 +255,26 @@ async def agent_main():
 
                 # Show startup information
                 UserInteraction.show_information(
-                    "Initial facts gathered, now generating plan...",
+                    "Initial facts gathered, now analyzing intent...",
+                )
+                
+
+                # In your main execution flow or planner
+                intent_analyzer = IntentAnalyzer(llm_manager, user_memory)
+                intent_analysis = await intent_analyzer.analyze_intent(
+                    query="Calculate the sum of ASCII values in 'INDIA'",
+                    system_prompt="Your system prompt here"
+                )
+
+                # Use the analysis for planning
+                UserInteraction.show_information(f"Primary Intent: {intent_analysis['primary_intent']}")
+                UserInteraction.show_information(f"Required Knowledge: {intent_analysis['required_knowledge']}")
+                UserInteraction.show_information(f"Execution Hints: {intent_analysis['execution_hints']}")
+                UserInteraction.show_information(f"Complete Intent Analysis: {intent_analysis}")
+
+                # Show startup information
+                UserInteraction.show_information(
+                    "Intent analysis complete, now generating plan...",
                 )
 
                 # Get the initial plan and confirmation using the planner

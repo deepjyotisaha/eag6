@@ -13,13 +13,17 @@ This project implements a math agent that can solve mathematical problems, displ
 
 ##TODO
 
-1. Add decision.py
-2. Add inclusion of ambiguous handling
-2. Add memory.pu
-3. Add frontend.py
-4. Add proper user interaction
-5. Add pyd
-6. Gooduse case
+1. Add Intent detection
+2. Route intent detection & memory to planning
+3. Modify execution to stick to planed plan and iteract with user as needed
+4. Add Pydantic
+4. Dynamic user interaction when in the descion which was not in the plan
+5. Generate dynamic questions for user memory
+6. Add frontend
+7. Add user input for query
+8. Add introduction to the user from tools and system prompt
+9. good use case 
+
 
 ## System Prompt
 
