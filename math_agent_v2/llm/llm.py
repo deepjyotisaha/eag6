@@ -6,6 +6,7 @@ import logging
 import asyncio
 from concurrent.futures import TimeoutError
 from config.config import Config
+from typing import Tuple, Optional, Dict
 
 class LLMManager:
     def __init__(self):
@@ -73,6 +74,77 @@ class LLMManager:
         except Exception as e:
             self.logger.error(f"Error in LLM generation: {e}")
             raise
+
+    def parse_llm_response(self, response_text: str, expected_type: str = None) -> Tuple[bool, str, Optional[Dict]]:
+        """
+        Parse and validate LLM response
+        
+        Args:
+            response_text: Raw response text from LLM
+            expected_type: Expected response type (e.g., 'plan', 'function_call')
+            
+        Returns:
+            Tuple[bool, str, Optional[Dict]]: (success, error_message, parsed_response)
+        """
+        try:
+            # Remove markdown code block markers
+            cleaned_text = response_text.replace('```json', '').replace('```', '').strip()
+            
+            # Handle newlines in the message content
+            # First, try to parse as is
+            try:
+                parsed_response = json.loads(cleaned_text)
+            except json.JSONDecodeError:
+                # If parsing fails, try to properly escape newlines in message content
+                if '"message":' in cleaned_text:
+                    # Split the text at the message field
+                    parts = cleaned_text.split('"message":', 1)
+                    if len(parts) == 2:
+                        # Get the message content and the rest
+                        before_message = parts[0] + '"message": "'
+                        # Find where the message content ends (at the next unescaped quote)
+                        message_content = parts[1].strip()
+                        in_quote = False
+                        quote_end = 0
+                        for i, char in enumerate(message_content):
+                            if char == '"' and (i == 0 or message_content[i-1] != '\\'):
+                                if in_quote:
+                                    quote_end = i
+                                    break
+                                in_quote = True
+                        
+                        if quote_end > 0:
+                            message = message_content[:quote_end]
+                            after_message = message_content[quote_end:]
+                            
+                            # Escape newlines and control characters
+                            escaped_message = (
+                                message
+                                .replace('\n', '\\n')  # Escape newlines
+                                .replace('\r', '\\r')  # Escape carriage returns
+                                .replace('\t', '\\t')  # Escape tabs
+                                .replace('"', '\\"')   # Escape quotes
+                            )
+                            
+                            # Reconstruct the JSON
+                            cleaned_text = before_message + escaped_message + '"' + after_message
+            
+            # Validate response type if specified
+            if expected_type and parsed_response.get("llm_response_type") != expected_type:
+                return False, f"Unexpected response type. Expected {expected_type}, got {parsed_response.get('llm_response_type')}", None
+            
+            return True, "", parsed_response
+            
+        except json.JSONDecodeError as e:
+            error_msg = f"Invalid JSON in response: {str(e)}"
+            self.logger.error(error_msg)
+            self.logger.error(f"Problematic text: {response_text}")
+            return False, error_msg, None
+            
+        except Exception as e:
+            error_msg = f"Error parsing response: {str(e)}"
+            self.logger.error(error_msg)
+            return False, error_msg, None
 
     def validate_response(self, response_text: str, expected_type: str = None) -> bool:
         """

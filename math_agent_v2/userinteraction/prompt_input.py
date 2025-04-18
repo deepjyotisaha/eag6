@@ -50,8 +50,12 @@ async def _create_agent_introduction(llm_manager: LLMManager, general_instructio
     
     try:
         response = await llm_manager.generate_with_timeout(prompt)
-        intro_data = json.loads(response.text)
+        success, error_msg, intro_data = llm_manager.parse_llm_response(response.text)
         
+        if not success:
+            logger.error(f"Failed to parse introduction response: {error_msg}")
+            return _get_fallback_introduction()
+            
         # Format the introduction nicely
         formatted_intro = f"{intro_data['introduction']}\n\n"
         formatted_intro += "Key Capabilities:\n"
@@ -65,19 +69,7 @@ async def _create_agent_introduction(llm_manager: LLMManager, general_instructio
         
     except Exception as e:
         logger.error(f"Error generating introduction: {e}")
-        # Fallback to a basic introduction if LLM fails
-        return """I am a Math Agent specialized in solving mathematical problems with visual outputs.
-
-Key Capabilities:
-• Solving mathematical problems step-by-step
-• Creating visual representations of solutions
-• Handling user interactions for clarity
-• Maintaining detailed execution records
-
-Key Constraints:
-• Require clear mathematical problems
-• Follow strict validation steps
-• Maintain audit trails"""
+        return _get_fallback_introduction()
 
 async def _get_example_prompts(llm_manager: LLMManager, general_instructions: str) -> list[str]:
     """

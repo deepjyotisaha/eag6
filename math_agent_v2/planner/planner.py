@@ -84,13 +84,15 @@ class Planner:
             self.logger.info(f"Prompt for plan: {plan_prompt}")
             
             response = await self.llm_manager.generate_with_timeout(plan_prompt)
-            response_text = response.text
+            success, error_msg, plan_data = self.llm_manager.parse_llm_response(
+                response.text,
+                expected_type="plan"
+            )
 
-            # Clean and validate the response
-            if not self.llm_manager.validate_response(response_text, expected_type="plan"):
-                raise ValueError("Invalid plan response format")
+            if not success:
+                raise ValueError(f"Invalid plan response format: {error_msg}")
                 
-            response_text = self.llm_manager.clean_response(response_text)
+            response_text = self.llm_manager.clean_response(response.text)
             self.logger.info(f"Plan response: {response_text}")
             
             # Clean the response text by removing markdown code block markers

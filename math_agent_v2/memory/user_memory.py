@@ -125,15 +125,13 @@ class UserMemory:
         prompt = self._create_recall_prompt(query)
         
         try:
-            # Get LLM's interpretation
             response = await self.llm_manager.generate_with_timeout(prompt)
+            success, error_msg, result = self.llm_manager.parse_llm_response(response.text)
             
-            # Parse and validate response
-            if not self.llm_manager.validate_response(response.text):
+            if not success:
+                self.logger.error(f"Failed to parse recall response: {error_msg}")
                 return None
                 
-            result = json.loads(self.llm_manager.clean_response(response.text))
-            
             # Add this recall attempt to facts
             self.add_fact({
                 "type": "recall_attempt",
@@ -144,7 +142,7 @@ class UserMemory:
             return result
             
         except Exception as e:
-            console.print(f"Error during recall: {str(e)}", style="red")
+            self.logger.error(f"Error during recall: {str(e)}")
             return None
 
     def _create_recall_prompt(self, query: str) -> str:

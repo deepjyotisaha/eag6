@@ -187,9 +187,17 @@ class DecisionMaker:
         Process the LLM response and handle different response types.
         """
         try:
-            # Clean and parse response
-            cleaned_response = self._clean_response_text(response_text)
-            response_json = json.loads(cleaned_response)
+            # Use the new parsing method
+            success, error_msg, response_json = llm_manager.parse_llm_response(response_text)
+            
+            if not success:
+                UserInteraction.report_error(
+                    "Failed to parse LLM response",
+                    "Parse Error",
+                    error_msg
+                )
+                return None
+            
             response_type = response_json.get("llm_response_type")
             
             execution_history.add_step({
@@ -239,12 +247,18 @@ class DecisionMaker:
                 })
                 return None
                 
-        except json.JSONDecodeError as e:
+        except Exception as e:
+            error_msg = str(e)
             UserInteraction.report_error(
-                "Failed to parse LLM response",
-                "Parse Error",
-                str(e)
+                "Error in response processing",
+                "Processing Error",
+                error_msg
             )
+            execution_history.add_step({
+                "step_type": "error",
+                "error_type": "response_processing_error",
+                "error_message": error_msg
+            })
             return None
 
     def _clean_response_text(self, response_text: str) -> str:
