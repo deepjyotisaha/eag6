@@ -3,6 +3,7 @@ import logging
 import traceback
 from userinteraction.console_ui import UserInteraction
 from memory.working_memory import ExecutionHistory  
+import ast
 
 class ActionExecutor:
     """
@@ -11,6 +12,38 @@ class ActionExecutor:
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
+
+    @staticmethod
+    def parse_function_call_params(param_parts: list[str]) -> dict:
+        """
+        Parses key=value parts from the FUNCTION_CALL format.
+        Supports nested keys like input.string=foo and list values like input.int_list=[1,2,3]
+        Returns a nested dictionary.
+        """
+        result = {}
+
+        logging.info(f"Parsing function call parameters: {param_parts}")
+
+        for part in param_parts:
+            if "=" not in part:
+                raise ValueError(f"Invalid parameter format (expected key=value): {part}")
+
+            key, value = part.split("=", 1)
+
+            # Try to parse as Python literal (int, float, list, etc.)
+            try:
+                parsed_value = ast.literal_eval(value)
+            except Exception:
+                parsed_value = value.strip()
+
+            # Support nested keys like input.string
+            keys = key.split(".")
+            current = result
+            for k in keys[:-1]:
+                current = current.setdefault(k, {})
+            current[keys[-1]] = parsed_value
+
+        return result
 
     @staticmethod
     def _convert_parameter(param_name: str, value: any, param_type: str) -> any:
@@ -55,6 +88,9 @@ class ActionExecutor:
             Optional[str]: The result of the tool execution, or None if there was an error
         """
         try:
+            logging.info(f"Executing tool: {tool.name}")
+            logging.info(f"Function info: {function_info}")
+
             # Extract function call details
             func_name = function_info.get("name")
             parameters = function_info.get("parameters", {})
@@ -76,29 +112,19 @@ class ActionExecutor:
                 )
                 raise ValueError(f"No session found for tool: {func_name}")
 
-            # Prepare arguments according to tool's input schema
-            arguments = {}
-            schema_properties = tool.inputSchema.get('properties', {})
-            params = list(parameters.values())
 
-            # Process each parameter according to schema
-            for param_name, param_info in schema_properties.items():
-                if not params:
-                    UserInteraction.report_error(
-                        f"Not enough parameters provided for {func_name}",
-                        "Parameter Error",
-                        f"Required parameter '{param_name}' is missing"
-                    )
-                    raise ValueError(f"Not enough parameters provided for {func_name}")
-                
-                value = params.pop(0)
-                param_type = param_info.get('type', 'string')
+            logging.info(f"Found tool: {tool.name}")
+            logging.info(f"Tool schema: {tool.inputSchema}")
+            logging.info(f"Parameters: {parameters}")
 
-                # Convert parameter to correct type
-                try:
-                    arguments[param_name] = ActionExecutor._convert_parameter(param_name, value, param_type)
-                except ValueError as e:
-                    raise
+            
+            #arguments = ActionExecutor.parse_function_call_params(parameters)
+            arguments = parameters
+
+            logging.info(f"Final arguments: {arguments}")
+            logging.info(f"Calling tool {func_name}")
+            
+            logging.info(f"Arguments: {arguments}")
 
             # Execute the tool
             result = await session.call_tool(func_name, arguments=arguments)

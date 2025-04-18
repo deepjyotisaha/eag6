@@ -18,6 +18,8 @@ import json
 from datetime import datetime
 from typing import List, Dict, Union, Optional
 from pathlib import Path
+
+from models_mcp_server import MathInput2Int, MathOutputInt, MathInputString, MathOutputDict, MathInputList, MathOutputFloat, MathInputInt, MathInputString,MathOutputListInt, MathInputListInt, DrawOutputDict, DrawInput4Int, DrawInput4Int1Str, StringsToIntsInput, StringsToIntsOutput
 #
 # # Add the project root to Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
@@ -65,14 +67,12 @@ logging.debug("This will appear in both common.log and math_mcp_server.log")
     ]
 )'''
 
-
-
 # instantiate an MCP server client
 mcp = FastMCP("Calculator")
 
 # DEFINE TOOLS
 @mcp.tool()
-def determine_datatype(value: str) -> dict:
+def determine_datatype(input: MathInputString) -> MathOutputDict:
     """
     Determines the possible data type(s) of a given input string value.
     Returns a dictionary with type information and validation results.
@@ -86,21 +86,21 @@ def determine_datatype(value: str) -> dict:
     }
     
     # Check for None/null
-    if value.lower() in ('none', 'null'):
+    if input.lower() in ('none', 'null'):
         type_info["possible_types"].append("NoneType")
         type_info["primary_type"] = "NoneType"
         return type_info
     
     # Check for boolean
-    if value.lower() in ('true', 'false'):
+    if input.lower() in ('true', 'false'):
         type_info["possible_types"].append("bool")
-        type_info["details"]["bool"] = value.lower() == 'true'
+        type_info["details"]["bool"] = input.lower() == 'true'
         type_info["primary_type"] = "bool"
         return type_info
     
     # Check for integer
     try:
-        int_val = int(value)
+        int_val = int(input)
         type_info["possible_types"].append("int")
         type_info["details"]["int"] = int_val
     except ValueError:
@@ -108,17 +108,17 @@ def determine_datatype(value: str) -> dict:
     
     # Check for float
     try:
-        float_val = float(value)
+        float_val = float(input)
         type_info["possible_types"].append("float")
         type_info["details"]["float"] = float_val
     except ValueError:
         pass
     
     # Check for list/array (if string starts and ends with brackets)
-    if value.strip().startswith('[') and value.strip().endswith(']'):
+    if input.strip().startswith('[') and input.strip().endswith(']'):
         try:
             import ast
-            list_val = ast.literal_eval(value)
+            list_val = ast.literal_eval(input)
             if isinstance(list_val, list):
                 type_info["possible_types"].append("list")
                 type_info["details"]["list"] = {
@@ -129,10 +129,10 @@ def determine_datatype(value: str) -> dict:
             pass
     
     # Check for dict (if string starts and ends with braces)
-    if value.strip().startswith('{') and value.strip().endswith('}'):
+    if input.strip().startswith('{') and input.strip().endswith('}'):
         try:
             import ast
-            dict_val = ast.literal_eval(value)
+            dict_val = ast.literal_eval(input)
             if isinstance(dict_val, dict):
                 type_info["possible_types"].append("dict")
                 type_info["details"]["dict"] = {
@@ -146,10 +146,10 @@ def determine_datatype(value: str) -> dict:
     # Check for string (always possible since input is string)
     type_info["possible_types"].append("str")
     type_info["details"]["str"] = {
-        "length": len(value),
-        "is_numeric": value.isnumeric(),
-        "is_alpha": value.isalpha(),
-        "is_alphanumeric": value.isalnum()
+        "length": len(input),
+        "is_numeric": input.isnumeric(),
+        "is_alpha": input.isalpha(),
+        "is_alphanumeric": input.isalnum()
     }
     
     # Determine primary type based on most specific match
@@ -160,111 +160,112 @@ def determine_datatype(value: str) -> dict:
                 type_info["primary_type"] = t
                 break
     
-    return type_info
+    return MathOutputDict(result=type_info)
 
-#addition tool
+
 @mcp.tool()
-def add(a: int, b: int) -> int:
+def add(input: MathInput2Int) -> MathOutputInt:
     """Add two numbers"""
-    logging.info("CALLED: add(a: int, b: int) -> int:")
-    return int(a + b)
+    print("CALLED: add(MathInput2Int) -> MathOutputInt")
+    return MathOutputInt(result=input.a + input.b)
+
 
 @mcp.tool()
-def add_list(l: list) -> int:
+def add_list(input: MathInputList) -> MathOutputInt:
     """Add all numbers in a list"""
     logging.info("CALLED: add(l: list) -> int:")
-    return sum(l)
+    return MathOutputInt(result=sum(input.list_input))
 
 # subtraction tool
 @mcp.tool()
-def subtract(a: int, b: int) -> int:
+def subtract(input: MathInput2Int) -> MathOutputInt:
     """Subtract two numbers"""
     logging.info("CALLED: subtract(a: int, b: int) -> int:")
-    return int(a - b)
+    return MathOutputInt(result=input.a - input.b)
 
 # multiplication tool
 @mcp.tool()
-def multiply(a: int, b: int) -> int:
+def multiply(input: MathInput2Int) -> MathOutputInt:
     """Multiply two numbers"""
     logging.info("CALLED: multiply(a: int, b: int) -> int:")
-    return int(a * b)
+    return MathOutputInt(result=input.a * input.b)
 
 #  division tool
 @mcp.tool() 
-def divide(a: int, b: int) -> float:
+def divide(input: MathInput2Int) -> MathOutputFloat:
     """Divide two numbers"""
     logging.info("CALLED: divide(a: int, b: int) -> float:")
-    return float(a / b)
+    return MathOutputFloat(result=input.a / input.b)
 
 # power tool
 @mcp.tool()
-def power(a: int, b: int) -> int:
+def power(input: MathInput2Int) -> MathOutputInt:
     """Power of two numbers"""
     logging.info("CALLED: power(a: int, b: int) -> int:")
-    return int(a ** b)
+    return MathOutputInt(result=input.a ** input.b)
 
 # square root tool
 @mcp.tool()
-def sqrt(a: int) -> float:
+def sqrt(input: MathInputInt) -> MathOutputFloat:
     """Square root of a number"""
     logging.info("CALLED: sqrt(a: int) -> float:")
-    return float(a ** 0.5)
+    return MathOutputFloat(result=input.a ** 0.5)
 
 # cube root tool
 @mcp.tool()
-def cbrt(a: int) -> float:
+def cbrt(input: MathInputInt) -> MathOutputFloat:
     """Cube root of a number"""
     logging.info("CALLED: cbrt(a: int) -> float:")
-    return float(a ** (1/3))
+    return MathOutputFloat(result=input.a ** (1/3))
 
 # factorial tool
 @mcp.tool()
-def factorial(a: int) -> int:
+def factorial(input: MathInputInt) -> MathOutputInt:
     """factorial of a number"""
     logging.info("CALLED: factorial(a: int) -> int:")
-    return int(math.factorial(a))
+    return MathOutputInt(result=math.factorial(input.a))
 
 # log tool
 @mcp.tool()
-def log(a: int) -> float:
+def log(input: MathInputInt) -> MathOutputFloat:
     """log of a number"""
     logging.info("CALLED: log(a: int) -> float:")
-    return float(math.log(a))
+    return MathOutputFloat(result=math.log(input.a))
 
 # remainder tool
 @mcp.tool()
-def remainder(a: int, b: int) -> int:
+def remainder(input: MathInput2Int) -> MathOutputInt:
     """remainder of two numbers divison"""
     logging.info("CALLED: remainder(a: int, b: int) -> int:")
-    return int(a % b)
+    return MathOutputInt(result=input.a % input.b)
 
 # sin tool
 @mcp.tool()
-def sin(a: int) -> float:
+def sin(input: MathInputInt) -> MathOutputFloat:
     """sin of a number"""
     logging.info("CALLED: sin(a: int) -> float:")
-    return float(math.sin(a))
+    return MathOutputFloat(result=math.sin(input.a))
 
 # cos tool
 @mcp.tool()
-def cos(a: int) -> float:
+def cos(input: MathInputInt) -> MathOutputFloat:
     """cos of a number"""
     logging.info("CALLED: cos(a: int) -> float:")
-    return float(math.cos(a))
+    return MathOutputFloat(result=math.cos(input.a))
 
 # tan tool
 @mcp.tool()
-def tan(a: int) -> float:
+def tan(input: MathInputInt) -> MathOutputFloat:
     """tan of a number"""
     logging.info("CALLED: tan(a: int) -> float:")
-    return float(math.tan(a))
+    return MathOutputFloat(result=math.tan(input.a))
 
 # mine tool
 @mcp.tool()
-def mine(a: int, b: int) -> int:
+def mine(input: MathInput2Int) -> MathOutputInt:
     """special mining tool"""
     logging.info("CALLED: mine(a: int, b: int) -> int:")
-    return int(a - b - b)
+    return MathOutputInt(result=input.a - input.b - input.b)
 
 @mcp.tool()
 def create_thumbnail(image_path: str) -> PILImage.Image:
@@ -275,31 +276,34 @@ def create_thumbnail(image_path: str) -> PILImage.Image:
     return Image(data=img.tobytes(), format="png")
 
 @mcp.tool()
-def strings_to_chars_to_int(string: str) -> list[int]:
+def strings_to_chars_to_int(input: StringsToIntsInput) -> StringsToIntsOutput:
     """Return the ASCII values of the characters in a word"""
     logging.info("CALLED: strings_to_chars_to_int(string: str) -> list[int]:")
-    return [int(ord(char)) for char in string]
+    ascii_values = [ord(char) for char in input.string]
+    return MathOutputListInt(result=ascii_values)
+
 
 @mcp.tool()
-def int_list_to_exponential_sum(int_list: list) -> float:
+def int_list_to_exponential_sum(input: MathInputListInt) -> MathOutputFloat:
     """Return sum of exponentials of numbers in a list"""
     logging.info("CALLED: int_list_to_exponential_sum(int_list: list) -> float:")
-    return sum(math.exp(i) for i in int_list)
+    return MathOutputFloat(result=sum(math.exp(i) for i in input.int_list))
+
 
 @mcp.tool()
-def fibonacci_numbers(n: int) -> list:
+def fibonacci_numbers(input: MathInputInt) -> MathOutputListInt:
     """Return the first n Fibonacci Numbers"""
     logging.info("CALLED: fibonacci_numbers(n: int) -> list:")
-    if n <= 0:
+    if input.a <= 0:
         return []
     fib_sequence = [0, 1]
-    for _ in range(2, n):
+    for _ in range(2, input.a):
         fib_sequence.append(fib_sequence[-1] + fib_sequence[-2])
-    return fib_sequence[:n]
+    return MathOutputListInt(result=fib_sequence[:input.a])
 
 
 @mcp.tool()
-async def open_paint() -> dict:
+async def open_paint() -> DrawOutputDict:
     """Open Microsoft Paint Canvas ready for drawing maximized on primary monitor with initialization verification"""
     global paint_app
     try:
@@ -407,7 +411,7 @@ async def open_paint() -> dict:
         time.sleep(1)    
         logging.info("Paint initialization complete and verified")
         
-        return {
+        return DrawOutputDict(result={
             "content": [
                 TextContent(
                     type="text",
@@ -415,9 +419,10 @@ async def open_paint() -> dict:
                 )
             ]
         }
+        )
     except Exception as e:
         logging.error(f"Error in open_paint: {str(e)}")
-        return {
+        return DrawOutputDict(result={
             "content": [
                 TextContent(
                     type="text",
@@ -425,9 +430,12 @@ async def open_paint() -> dict:
                 )
             ]
         }
+        )
+
+
 
 @mcp.tool()
-async def get_screen_canvas_dimensions() -> dict:
+async def get_screen_canvas_dimensions() -> DrawOutputDict:
     """Get the resolution of the screen and the dimensions of the Microsoft Paint Canvas with proper verification"""
     try:
         # Get monitor information
@@ -449,41 +457,41 @@ async def get_screen_canvas_dimensions() -> dict:
         logging.info(f"Total number of monitors: {monitor_count}")
         logging.info(f"Primary Monitor Resolution: {primary_width}x{primary_height}")
         
-        return {
+        return DrawOutputDict(result={
             "content": [
                 TextContent(
                     type="text",
                     text=f"Screen resolution: Width={primary_width}, Height={primary_height}, Microsoft Paint Canvas available for drawing is a rectangle with width={canvas_width} and height={canvas_height} positioned at {canvas_x, canvas_y}. The canvas is a WHITE rectangular drawing area which is contained within the screen resolution and is available at a specific co-ordinate on the screen for drawing. You first determine the (x,y) co-ordinates for drawing the elements on the canvas, and then determine the width and height parameters for the elements based on the dimensions of the canvas."
                 )
             ]
-        }
+        })
     except Exception as e:
         logging.error(f"Error getting canvas resolution: {str(e)}")
-        return {
+        return DrawOutputDict(result={
             "content": [
                 TextContent(
                     type="text",
                     text=f"Error getting canvas resolution: {str(e)}"
                 )
             ]
-        }   
+        })
 
 @mcp.tool()
-async def draw_rectangle(x1: int, y1: int, x2: int, y2: int) -> dict:
+async def draw_rectangle(input: DrawInput4Int) -> DrawOutputDict:
     """Draw a black rectangle in Microsoft Paint Canvas from (x1,y1) to (x2,y2)"""
     global paint_app
     try:
         if not paint_app:
-            return {
+            return DrawOutputDict(result={
                 "content": [
                     TextContent(
                         type="text",
                         text="Paint is not open. Please call open_paint first."
                     )
                 ]
-            }
+            })
         
-        logging.info(f"Starting rectangle drawing operation from ({x1},{y1}) to ({x2},{y2})")
+        logging.info(f"Starting rectangle drawing operation from ({input.x1},{input.y1}) to ({input.x2},{input.y2})")
         
         # Get the Paint window
         paint_window = paint_app.window(class_name='MSPaintApp')
@@ -518,15 +526,15 @@ async def draw_rectangle(x1: int, y1: int, x2: int, y2: int) -> dict:
         # Try drawing with mouse input
         try:
             # Move to start position first
-            canvas.click_input(coords=(x1, y1))
+            canvas.click_input(coords=(input.x1, input.y1))
             time.sleep(0.2)
       
             # Draw the rectangle
-            canvas.press_mouse_input(coords=(x1, y1))
+            canvas.press_mouse_input(coords=(input.x1, input.y1))
             time.sleep(0.2)
-            canvas.move_mouse_input(coords=(x2, y2))
+            canvas.move_mouse_input(coords=(input.x2, input.y2))
             time.sleep(0.2)
-            canvas.release_mouse_input(coords=(x2, y2))
+            canvas.release_mouse_input(coords=(input.x2, input.y2))
             time.sleep(0.2)
           
             logging.info("Rectangle drawing completed")
@@ -535,27 +543,27 @@ async def draw_rectangle(x1: int, y1: int, x2: int, y2: int) -> dict:
             logging.error(f"Failed to draw rectangle: {str(e)}")
             raise
         
-        return {
+        return DrawOutputDict(result={
             "content": [
                 TextContent(
                     type="text",
-                    text=f"Black Rectangle drawn on Microsoft Paint Canvas from ({x1},{y1}) to ({x2},{y2})"
+                    text=f"Black Rectangle drawn on Microsoft Paint Canvas from ({input.x1},{input.y1}) to ({input.x2},{input.y2})"
                 )
             ]
-        }
+        })
     except Exception as e:
         logging.error(f"Error in draw_rectangle: {str(e)}")
-        return {
+        return DrawOutputDict(result={
             "content": [
                 TextContent(
                     type="text",
                     text=f"Error drawing black rectangle on Microsoft Paint Canvas: {str(e)}"
                 )
             ]
-        }
+        })
 
 @mcp.tool()
-async def add_text_in_paint(text: str, x: int, y: int, width: int = 200, height: int = 100) -> dict:
+async def add_text_in_paint(input: DrawInput4Int1Str) -> DrawOutputDict:
     """
     Draw text in Microsoft Paint Canvas at specified coordinates starting from (x,y) within the box of size (width, height)
     
@@ -563,16 +571,16 @@ async def add_text_in_paint(text: str, x: int, y: int, width: int = 200, height:
     global paint_app
     try:
         if not paint_app:
-            return {
+            return DrawOutputDict(result={
                 "content": [
                     TextContent(
                         type="text",
                         text="Paint is not open. Please call open_paint first."
                     )
                 ]
-            }
+            })
         
-        logging.info(f"Expected: Starting text addition operation: '{text}' at ({x}, {y}) with box size ({width}, {height})")
+        logging.info(f"Expected: Starting text addition operation: '{input.text}' at ({input.x}, {input.y}) with box size ({input.width}, {input.height})")
 
 
         #temp_x = x
@@ -585,7 +593,7 @@ async def add_text_in_paint(text: str, x: int, y: int, width: int = 200, height:
         #width = 200
         #height = 100
 
-        logging.info(f"Actual: Starting text addition operation: '{text}' at ({x}, {y}) with box size ({width}, {height})")
+        logging.info(f"Actual: Starting text addition operation: '{input.text}' at ({input.x}, {input.y}) with box size ({input.width}, {input.height})")
   
         # Get the Paint window
         paint_window = paint_app.window(class_name='MSPaintApp')
@@ -621,19 +629,19 @@ async def add_text_in_paint(text: str, x: int, y: int, width: int = 200, height:
         logging.info("Creating text box")
         
         # Click and drag to create text box
-        canvas.press_mouse_input(coords=(x, y))
+        canvas.press_mouse_input(coords=(input.x, input.y))
         time.sleep(0.5)
         
         # Drag to create text box of specified size
-        canvas.move_mouse_input(coords=(x + width, y + height))
+        canvas.move_mouse_input(coords=(input.x + input.width, input.y + input.height))
         time.sleep(0.5)
         
-        canvas.release_mouse_input(coords=(x + width, y + height))
+        canvas.release_mouse_input(coords=(input.x + input.width, input.y + input.height))
         time.sleep(1)
         
         # Click inside the text box to ensure it's selected
-        click_x = x + (width // 2)  # Click in the middle of the box
-        click_y = y + (height // 2)
+        click_x = input.x + (input.width // 2)  # Click in the middle of the box
+        click_y = input.y + (input.height // 2)
         canvas.click_input(coords=(click_x, click_y))
         time.sleep(0.5)
         
@@ -644,8 +652,8 @@ async def add_text_in_paint(text: str, x: int, y: int, width: int = 200, height:
         time.sleep(0.2)
         
         # Type the text character by character
-        logging.info(f"Typing text: {text}")
-        for char in text:
+        logging.info(f"Typing text: {input.text}")
+        for char in input.text:
             if char == ' ':
                 paint_window.type_keys('{SPACE}')
             elif char == '\n':
@@ -669,24 +677,24 @@ async def add_text_in_paint(text: str, x: int, y: int, width: int = 200, height:
         #width = temp_width
         #height = temp_height
         
-        return {
+        return DrawOutputDict(result={
             "content": [
                 TextContent(
                     type="text",
-                    text=f"Text '{text}' added successfully at ({x}, {y}) on Microsoft Paint Canvas"
+                    text=f"Text '{input.text}' added successfully at ({input.x}, {input.y}) on Microsoft Paint Canvas"
                 )
             ]
-        }
+        })
     except Exception as e:
         logging.error(f"Error adding text: {str(e)}")
-        return {
+        return DrawOutputDict(result={
             "content": [
                 TextContent(
                     type="text",
                     text=f"Error adding text: {str(e)} on Microsoft Paint Canvas"
                 )
             ]
-        }
+        })
 
 # DEFINE RESOURCES
 

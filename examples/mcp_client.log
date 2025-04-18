@@ -1,0 +1,3 @@
+2025-04-19 00:25:30,074 - INFO - Configuring Gemini API...
+2025-04-19 00:25:30,075 - INFO - Gemini API configured successfully
+2025-04-19 00:25:30,075 - DEBUG - Using proactor: IocpProactor

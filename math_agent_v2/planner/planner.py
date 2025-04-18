@@ -57,6 +57,8 @@ class Planner:
             
             Please generate a plan for the following query: {execution_history.user_query} 
 
+            You can include user interaction steps in the plan if needed.
+
             Example Plan Response:
             {{
                 "llm_response_type": "plan",
@@ -69,9 +71,9 @@ class Planner:
                     }},
                     {{
                         "step_number": 2,
-                        "description": "Check for ambiguities in the problem statement",
-                        "reasoning": "Need to ensure problem is well-defined before proceeding",
-                        "expected_tool": "clarify (if needed)",
+                        "description": "draw a rectangle",
+                        "reasoning": "Need to draw a rectangle",
+                        "expected_tool": "draw_rectangle",
                     }}
                 ]
             }}

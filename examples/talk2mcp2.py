@@ -3,11 +3,29 @@ from dotenv import load_dotenv
 from mcp import ClientSession, StdioServerParameters, types
 from mcp.client.stdio import stdio_client
 import asyncio
-from google import genai
+#from google import genai
+import google.generativeai as genai
 from concurrent.futures import TimeoutError
 from functools import partial
 import json
 import ast
+from functools import partial
+import logging
+import sys
+from datetime import datetime
+
+
+# Configure logging at the start of your file, after the imports
+logging.basicConfig(
+    #filename='mcp_client.log',
+    #filemode='a',  # append mode
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('mcp_client.log', mode='w'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 def parse_function_call_params(param_parts: list[str]) -> dict:
     """
@@ -42,15 +60,29 @@ def parse_function_call_params(param_parts: list[str]) -> dict:
 load_dotenv()
 
 # Access your API key and initialize Gemini client correctly
-api_key = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=api_key)
+# Access your API key and initialize Gemini client correctly
+api_key = os.getenv('GOOGLE_API_KEY')
+if not api_key:
+    raise ValueError("GOOGLE_API_KEY not found in environment variables")
+
+logging.info("Configuring Gemini API...")
+try:
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-2.0-flash')
+    logging.info("Gemini API configured successfully")
+except Exception as e:
+    logging.error(f"Error configuring Gemini API: {str(e)}")
+    raise
 
 max_iterations = 3
 last_response = None
 iteration = 0
 iteration_response = []
 
-async def generate_with_timeout(client, prompt, timeout=10):
+
+
+
+async def generate_with_timeout(prompt, timeout=10):
     """Generate content with a timeout"""
     print("Starting LLM generation...")
     try:
@@ -59,8 +91,7 @@ async def generate_with_timeout(client, prompt, timeout=10):
         response = await asyncio.wait_for(
             loop.run_in_executor(
                 None, 
-                lambda: client.models.generate_content(
-                    model="gemini-2.0-flash",
+                lambda: model.generate_content(
                     contents=prompt
                 )
             ),
@@ -88,10 +119,10 @@ async def main():
     try:
         # Create a single MCP server connection
         print("Establishing connection to MCP server...")
+
         server_params = StdioServerParameters(
             command="python",
-            args=["example2.py"],
-            cwd="I:/TSAI/2025/EAG/Session 6/Code/pydanticBasics"
+            args=["example.py"]
         )
 
         async with stdio_client(server_params) as (read, write):
@@ -198,7 +229,7 @@ Your entire response must be a single line starting with either FUNCTION_CALL: o
                     print("Preparing to generate LLM response...")
                     prompt = f"{system_prompt}\n\nQuery: {current_query}"
                     try:
-                        response = await generate_with_timeout(client, prompt)
+                        response = await generate_with_timeout(prompt)
                         response_text = response.text.strip()
                         print(f"LLM Response: {response_text}")
                         

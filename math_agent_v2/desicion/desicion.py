@@ -67,8 +67,6 @@ class DecisionMaker:
 
             PREVIOUS FEEDBACK: {previous_feedback}
 
-            USER INTERACTION TOOLS: {self.user_interaction_tools}
-
             PLAN & ACTUAL STEPS EXECUTED and RESULTS:
             {{
                 "execution_plan": {execution_history.plan},
@@ -84,12 +82,68 @@ class DecisionMaker:
                 "function": {{
                     "name": "strings_to_chars_to_int",
                     "parameters": {{
-                        "string": "INDIA"
+                        "input": {{
+                            "string": "INDIA"
+                        }}
                     }},
                     "reasoning_tag": "ARITHMETIC",
                     "reasoning": "Converting characters to ASCII values for calculation"
                 }}
             }}
+
+            Example Function Call:
+            {{
+                "llm_response_type": "function_call",
+                "function": {{
+                    "name": "add",
+                    "parameters": {{
+                        "input": {{
+                            "a": 1,
+                            "b": 2
+                        }}
+                    }},
+                    "reasoning_tag": "ARITHMETIC",
+                    "reasoning": "Adding two numbers"
+                }}
+            }}
+
+            
+            Example Function Call:
+            {{
+                "llm_response_type": "function_call",
+                "function": {{
+                    "name": "add_text_in_paint",
+                    "parameters": {{
+                        "input": {{
+                            "x": 1,
+                            "y": 2,
+                            "width": 3,
+                            "height": 4,
+                            "text": "Hello"
+                        }}
+                    }},
+                    "reasoning_tag": "DRAWING",
+                    "reasoning": "Drawing a rectangle and adding text to it"
+                }}
+            }}
+
+            Example Final Answer:
+            {{
+                "llm_response_type": "final_answer",
+                "result": "42",
+                "summary": "Completed all calculations and displayed result"
+            }}
+
+            Make sure that you use the correct function call format as specified in the examples above.
+
+            You can also use nested keys for structured inputs (e.g., input.string, input.int_list).
+            For list-type inputs, use square brackets: input.int_list=[73,78,68,73,65]
+
+            If you need to interact with the user, refer to the following format:
+
+            USER INTERACTION TOOLS: {self.user_interaction_tools}
+
+            and use the following format:
 
             Example User Interaction Handling Call:
             {{
@@ -107,16 +161,11 @@ class DecisionMaker:
                 }}
             }}
 
-            Example Final Answer:
-            {{
-                "llm_response_type": "final_answer",
-                "result": "42",
-                "summary": "Completed all calculations and displayed result"
-            }}
-
             Important:
             - Each function call must be in a separate JSON response. 
             - Your response should have ONLY JSON object.
+            - NEVER send the function name in llm_response_type
+            - NEVER send any other values in llm_response_type OTHER THAN: function_call OR user_interaction OR final_answer
             - Respond with the final answer ONLY when you have completed all the steps in the plan needed to solve the end user query.
             - When a function returns multiple values, you need to process all of them
             - Do not repeat function calls with the same parameters at any cost
