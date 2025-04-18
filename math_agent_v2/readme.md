@@ -153,7 +153,6 @@ Customize behavior in `config/config.py`:
 - User feedback integration
 
 ## Backlog & Known Issues
-1. Add pydantic
 2. Move all prompts to central instructions
 3. Enhance intent detection
 4. Auto Mode should be tested fully
