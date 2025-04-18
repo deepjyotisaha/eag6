@@ -90,7 +90,9 @@ class LLMManager:
             # Remove markdown code block markers
             cleaned_text = response_text.replace('```json', '').replace('```', '').strip()
             
-            # Handle newlines in the message content
+            # Initialize parsed_response
+            parsed_response = None
+            
             # First, try to parse as is
             try:
                 parsed_response = json.loads(cleaned_text)
@@ -128,6 +130,18 @@ class LLMManager:
                             
                             # Reconstruct the JSON
                             cleaned_text = before_message + escaped_message + '"' + after_message
+                            # Try parsing again with escaped content
+                            parsed_response = json.loads(cleaned_text)
+                        else:
+                            raise json.JSONDecodeError("Could not find end of message content", cleaned_text, 0)
+                    else:
+                        raise json.JSONDecodeError("Malformed message field", cleaned_text, 0)
+                else:
+                    raise  # Re-raise the original JSONDecodeError
+            
+            # If we got here and parsed_response is still None, something went wrong
+            if parsed_response is None:
+                return False, "Failed to parse response", None
             
             # Validate response type if specified
             if expected_type and parsed_response.get("llm_response_type") != expected_type:

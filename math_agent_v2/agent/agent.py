@@ -281,7 +281,7 @@ async def agent_main():
                     query=user_query
                 )
 
-                intent_analyzer.print_status(intent_analysis)
+                intent_analyzer.print_status(metadata=False, intent_analysis=intent_analysis)
 
                 # Use the analysis for planning
                 UserInteraction.show_information(f"Primary Intent: {intent_analysis['primary_intent']}")
@@ -360,6 +360,7 @@ async def agent_main():
                     elif decision["step_type"] == "final_answer":
                         logging.info("\n=== Agent Execution Complete ===")
                         execution_history.final_answer = decision["response"]
+                        execution_history.print_status(detailed=False)
                          # On successful completion
                         display_processing_stop(success=True, message="=== All tasks completed successfully! ===")
                         break

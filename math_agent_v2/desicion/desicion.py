@@ -46,7 +46,7 @@ class DecisionMaker:
             #execution_history.print_status()
 
             # Print detailed view
-            execution_history.print_status(detailed=True)
+            #execution_history.print_status(detailed=False)
 
             # Print JSON view
             #execution_history.print_json()

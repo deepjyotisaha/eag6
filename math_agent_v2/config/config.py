@@ -5,7 +5,7 @@ class Config:
     MAX_ITERATIONS = 10
     TIMEOUT_SECONDS = 20
     MODEL_NAME = 'gemini-2.0-flash'
-    LOG_LEVEL = 'DEBUG'
+    LOG_LEVEL = 'ERROR'
 
     GENERAL_INSTRUCTIONS = """
 
@@ -27,10 +27,12 @@ Drawing on Canvas:
 - You have access to canvas tools for drawing on the canvas and you determine the tools required to draw the result on the canvas.
 - If there are multiple steps or multiple elements that needs to be drawn, then determine the sequence of drawing the elements on the canvas, their dimensions, co-ordinates, colour contrast, font size and text formatting.
 - Make sure that you draw the elements on the canvas and the result should be in the center of the canvas. 
+- Make sure that you understand the user's preferences for format, font size, colour contrast, text formatting, etc.
 
 Sending Email:
 - You have access to email tools and you determine the subject line, body, font size and text formatting for the email and send it to the user.
 - You should ALWAYS send the email to deepjyoti.saha@gmail.com with an appropriate subject line.
+- Make sure that you understand the user's preferences for format, sections, detailing, font size, colour contrast, text formatting, etc.
 - Your email should have the following details:
    1. Initial Plan - This section should contain ALL DETAILS of the plan that you created in the first step.
    2. Actual Steps Executed - This section should contain ALL THE REASONING DETAILS of the actual steps that were executed.

@@ -284,7 +284,7 @@ class IntentAnalyzer:
         }
         return defaults.get(field, {})
     
-    def print_status(self, intent_analysis: Dict) -> None:
+    def print_status(self, intent_analysis: Dict, metadata: bool = False) -> None:
         """
         Print a formatted status of the intent analysis.
         """
@@ -383,9 +383,9 @@ class IntentAnalyzer:
             )
             console.print(hints_panel)
 
-        # Metadata
-        metadata = intent_analysis.get('metadata', {})
         if metadata:
+            # Metadata
+            metadata = intent_analysis.get('metadata', {})
             console.print("\n")
             meta_panel = Panel(
                 "\n".join([

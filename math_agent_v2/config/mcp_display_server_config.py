@@ -1,6 +1,6 @@
 class MCPDisplayServerConfig:
     # Monitor type configuration
-    LAPTOP_MONITOR = True
+    LAPTOP_MONITOR = False
 
     # Desktop monitor positions
     DESKTOP_MONITOR_CANVAS_X_POS = 452
