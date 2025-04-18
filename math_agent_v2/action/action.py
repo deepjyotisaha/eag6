@@ -102,7 +102,7 @@ class ActionExecutor:
 
             # Execute the tool
             result = await session.call_tool(func_name, arguments=arguments)
-            
+
             # Process and format the result
             if hasattr(result, 'content'):
                 if isinstance(result.content, list):

@@ -1,11 +1,12 @@
 import logging
 import json
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any, Tuple
 from datetime import datetime
 from userinteraction.console_ui import UserInteraction
 from llm.llm import LLMManager
 from memory.working_memory import ExecutionHistory
 from memory.user_memory import UserMemory
+from userinteraction.userinteraction_tools import create_user_interaction_tools
 
 class DecisionMaker:
     """
@@ -14,6 +15,7 @@ class DecisionMaker:
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
+        self.user_interaction_tools = create_user_interaction_tools()
 
     async def make_next_step_decision(
         self,
@@ -65,6 +67,8 @@ class DecisionMaker:
 
             PREVIOUS FEEDBACK: {previous_feedback}
 
+            USER INTERACTION TOOLS: {self.user_interaction_tools}
+
             PLAN & ACTUAL STEPS EXECUTED and RESULTS:
             {{
                 "execution_plan": {execution_history.plan},
@@ -87,12 +91,13 @@ class DecisionMaker:
                 }}
             }}
 
-            Example Error Handling Function Call:
+            Example User Interaction Handling Call:
             {{
-                "llm_response_type": "function_call",
+                "llm_response_type": "user_interaction",
                 "function": {{
-                    "name": "clarify",
+                    "name": "escalate",
                     "parameters": {{
+                        "interaction_type": "escalation",
                         "question": "Is the dimension provided in centimeters or inches?",
                         "context": "The problem statement doesn't specify units for measurement"
                     }},
@@ -116,6 +121,7 @@ class DecisionMaker:
             - When a function returns multiple values, you need to process all of them
             - Do not repeat function calls with the same parameters at any cost
             - Dont add () to the function names, just use the function name as it is.
+            - For User Interaction, use the as "llm_response_type": "user_interaction" and NOT as a "function_call".
 
             IMPORTANT: You will always have access to multiple tools, but you must always invoke the tools needed to solve the problem, and you must always follow the sequence of solving the problem.
 
@@ -202,6 +208,11 @@ class DecisionMaker:
                     intent_analysis,
                     user_memory,
                     general_instructions
+                )
+            elif response_type == "user_interaction":
+                return await self._handle_user_interaction(
+                    response_json, 
+                    execution_history=execution_history
                 )
             elif response_type == "final_answer":
                 return await self._handle_final_answer(
@@ -339,6 +350,7 @@ class DecisionMaker:
             general_instructions
         )
 
+    #This function is used to handle the user confirmation and feedback, which is hard coded as a flow
     async def _handle_user_confirmation(
         self,
         message: str,
@@ -390,3 +402,98 @@ class DecisionMaker:
                 "step_type": "execution_aborted"
             })
             return None
+        
+    #This function is used to handle the user interaction type responses, which is determined by the LLM
+    async def _handle_user_interaction(
+        self,
+        response_json: Dict,
+        execution_history: ExecutionHistory
+    ) -> Optional[Dict]:
+        """
+        Handle user interaction type responses.
+        Uses UserInteraction module for all user interactions.
+        """
+        function_details = response_json.get('function', {})
+        function_name = function_details.get('name')
+        parameters = function_details.get('parameters', {})
+        
+        if not function_name or not parameters:
+            raise ValueError("Invalid user interaction format: missing function name or parameters")
+
+        # Execute the interaction
+        result = await self._execute_user_interaction(function_name, parameters)
+        
+        # Record the interaction in history
+        interaction_record = {
+            'type': 'user_interaction',
+            'function': function_name,
+            'parameters': parameters,
+            'reasoning': function_details.get('reasoning', ''),
+            'reasoning_tag': function_details.get('reasoning_tag', ''),
+            'confidence': function_details.get('confidence', ''),
+            'result': result
+        }
+        
+        execution_history.add_step({
+            "step_type": "user_interaction_complete",
+            "interaction_type": function_name,
+            "result": result
+        })
+        
+        return {
+            "step_type": "user_interaction",
+            "status": "success",
+            "interaction_type": function_name,
+            "result": result
+        }
+
+    async def _execute_user_interaction(
+        self,
+        function_name: str,
+        parameters: Dict
+    ) -> Any:
+        """Execute the appropriate user interaction based on type."""
+        logging.info(f"Executing user interaction: {function_name}")
+        logging.info(f"User interaction parameters: {parameters}")
+        
+        if function_name == "show_information":
+            logging.info(f"Showing information: {parameters.get('message', '')}")
+            UserInteraction.show_information(
+                message=parameters.get("message", ""),
+                title=parameters.get("title", "Information")
+            )
+            return {"status": "shown"}
+            
+        elif function_name == "get_confirmation":
+            logging.info(f"Getting confirmation: {parameters.get('message', '')}")
+            return UserInteraction.get_confirmation(
+                message=parameters.get("message", ""),
+                instructions=parameters.get("instructions")
+            )
+            
+        elif function_name == "report_error":
+            logging.info(f"Reporting error: {parameters.get('message', '')}")
+            UserInteraction.report_error(
+                error_message=parameters.get("message", ""),
+                error_type=parameters.get("error_type", "Error"),
+                details=parameters.get("details")
+            )
+            return {"status": "error_reported"}
+            
+        elif function_name == "escalate":
+            logging.info(f"Escalating: {parameters.get('question', '')}")
+            return UserInteraction.escalate(
+                question=parameters.get("question", ""),
+                context=parameters.get("context")
+            )
+            
+        else:
+            # Default to showing information
+            logging.info(f"Unknown interaction type: {function_name}")
+            UserInteraction.show_information(
+                message=str(function_name),
+                title="System Message"
+            )
+            return {"status": "unknown_type_handled"}
+
+

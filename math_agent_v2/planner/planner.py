@@ -5,7 +5,7 @@ from userinteraction.console_ui import UserInteraction
 from llm.llm import LLMManager
 from memory.user_memory import UserMemory
 from memory.working_memory import ExecutionHistory
-
+from userinteraction.userinteraction_tools import create_user_interaction_tools
 
 class Planner:
     def __init__(self, llm_manager: LLMManager):
@@ -17,6 +17,7 @@ class Planner:
         """
         self.llm_manager = llm_manager
         self.logger = logging.getLogger(__name__)
+        self.user_interaction_tools = create_user_interaction_tools()
 
 
     async def get_plan(self, 
@@ -39,8 +40,6 @@ class Planner:
             Optional[Dict]: The confirmed plan or None if aborted
         """
         self.logger.info("Generating initial plan...")
-
-        self.logger.info(f"System prompt: {general_instructions}")
         
         try:
             # Generate plan from LLM
@@ -53,6 +52,8 @@ class Planner:
             INTENT ANALYSIS: {intent_analysis}
               
             GENERAL INSTRUCTIONS: {general_instructions}
+
+            USER INTERACTION TOOLS: {self.user_interaction_tools}
             
             Please generate a plan for the following query: {execution_history.user_query} 
 
@@ -80,6 +81,8 @@ class Planner:
             if revised_prompt:
                 plan_prompt = revised_prompt
 
+            self.logger.info(f"Prompt for plan: {plan_prompt}")
+            
             response = await self.llm_manager.generate_with_timeout(plan_prompt)
             response_text = response.text
 

@@ -327,7 +327,15 @@ async def agent_main():
                         if result is None:
                             break
                         iteration_response.append(result)
-                            
+
+                    elif decision["step_type"] == "user_interaction":   
+                        # Execute tool
+                        #Do nothing as the user interaction is handled by the desicion maker
+                        #In future we can add a tool to handle the user interaction
+                        if result is None:
+                            break
+                        iteration_response.append(result)
+
                     elif decision["step_type"] == "final_answer":
                         logging.info("\n=== Agent Execution Complete ===")
                         execution_history.final_answer = decision["response"]
