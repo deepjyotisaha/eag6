@@ -96,12 +96,8 @@ pip install beautifulsoup4
 ## Usage
 
 ### Starting the System
-1. Start the Gmail MCP server:
-   ```bash
-   python mcp_server/gmail_mcp_server/src/gmail/gmail_mcp_server.py
-   ```
 
-2. Launch the main application:
+1. Launch the main application:
    ```bash
    python main.py
    ```
@@ -156,11 +152,13 @@ Customize behavior in `config/config.py`:
 - API error recovery
 - User feedback integration
 
-## Known Limitations
-1. Function call repetition issues
-2. Canvas size constraints
-3. Screen resolution dependencies
-4. Font size optimization needed
+## Backlog & Known Issues
+1. Add pydantic
+2. Move all prompts to central instructions
+3. Enhance intent detection
+4. Auto Mode should be tested fully
+5. Move to configuration: Auto Mode OR user Confirmation but not both
+
 
 ## Contributing
 1. Fork the repository

@@ -311,7 +311,8 @@ async def agent_main():
  
                 global iteration, last_response
                 
-                while iteration < max_iterations:
+                #while iteration < max_iterations:
+                while True:
                     logging.info(f"\n--- Iteration {iteration + 1} ---")
 
                     # Print summary view
@@ -360,12 +361,12 @@ async def agent_main():
                     elif decision["step_type"] == "final_answer":
                         logging.info("\n=== Agent Execution Complete ===")
                         execution_history.final_answer = decision["response"]
-                        execution_history.print_status(detailed=False)
+                        execution_history.print_status(detailed=True)
                          # On successful completion
                         display_processing_stop(success=True, message="=== All tasks completed successfully! ===")
                         break
                         
-                    iteration += 1
+                    #iteration += 1
 
     except Exception as e:
         logging.error(f"Error in main execution: {e}")
