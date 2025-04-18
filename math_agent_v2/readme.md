@@ -13,9 +13,13 @@ This project implements a math agent that can solve mathematical problems, displ
 
 ##TODO
 
-1. Add Intent detection
+1. Add pydantic
+2. Add autoprompting via user input
+3. Add central insructions via config
+4. Beutify the prints
 2. Route intent detection & memory to planning
 3. Modify execution to stick to planed plan and iteract with user as needed
+4. Add user communication
 4. Add Pydantic
 4. Dynamic user interaction when in the descion which was not in the plan
 5. Generate dynamic questions for user memory

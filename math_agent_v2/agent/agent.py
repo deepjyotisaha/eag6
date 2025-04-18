@@ -332,6 +332,7 @@ async def agent_main():
                         # Execute tool
                         #Do nothing as the user interaction is handled by the desicion maker
                         #In future we can add a tool to handle the user interaction
+                        result = decision
                         if result is None:
                             break
                         iteration_response.append(result)
