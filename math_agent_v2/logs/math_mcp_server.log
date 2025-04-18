@@ -1,1 +1,44 @@
-2025-04-18 12:05:30,834 - DEBUG - math_mcp_server:<module>:53 - This will appear in both common.log and math_mcp_server.log
+2025-04-18 13:11:13,136 - DEBUG - math_mcp_server:<module>:53 - This will appear in both common.log and math_mcp_server.log
+2025-04-18 13:13:05,312 - INFO - math_mcp_server:factorial:224 - CALLED: factorial(a: int) -> int:
+2025-04-18 13:13:09,699 - INFO - math_mcp_server:open_paint:333 - Paint window found, verifying UI elements...
+2025-04-18 13:13:10,203 - INFO - math_mcp_server:open_paint:343 - Canvas element found and verified
+2025-04-18 13:13:10,205 - INFO - math_mcp_server:open_paint:344 - Canvas dimensions: (L0, T23, R0, B23)
+2025-04-18 13:13:10,206 - INFO - math_mcp_server:open_paint:360 - 
+==================== Display Configuration ====================
+2025-04-18 13:13:10,206 - INFO - math_mcp_server:open_paint:361 - Total number of monitors: 1
+2025-04-18 13:13:10,710 - INFO - math_mcp_server:open_paint:388 - Window successfully maximized
+2025-04-18 13:13:11,441 - INFO - math_mcp_server:open_paint:402 - UI elements verified and accessible
+2025-04-18 13:13:12,441 - INFO - math_mcp_server:open_paint:408 - Paint initialization complete and verified
+2025-04-18 13:13:15,319 - INFO - math_mcp_server:get_screen_canvas_dimensions:448 - 
+==================== Display Configuration ====================
+2025-04-18 13:13:15,319 - INFO - math_mcp_server:get_screen_canvas_dimensions:449 - Total number of monitors: 1
+2025-04-18 13:13:15,319 - INFO - math_mcp_server:get_screen_canvas_dimensions:450 - Primary Monitor Resolution: 1920x1080
+2025-04-18 13:13:19,428 - INFO - math_mcp_server:draw_rectangle:486 - Starting rectangle drawing operation from (750,600) to (1770,1000)
+2025-04-18 13:13:19,433 - INFO - math_mcp_server:draw_rectangle:493 - Setting Paint window focus
+2025-04-18 13:13:20,638 - INFO - math_mcp_server:draw_rectangle:499 - Paint window rectangle: (-8, -8, 1928, 1040)
+2025-04-18 13:13:20,638 - INFO - math_mcp_server:draw_rectangle:512 - Clicking rectangle tool at (805, 130)
+2025-04-18 13:13:22,778 - INFO - math_mcp_server:draw_rectangle:532 - Rectangle drawing completed
+2025-04-18 13:13:27,332 - INFO - math_mcp_server:add_text_in_paint:575 - Expected: Starting text addition operation: 'Factorial: The product of an integer and all the integers below it; e.g., factorial four ( 4! ) is equal to 24.' at (760, 610) with box size (1000, 100)
+2025-04-18 13:13:27,332 - INFO - math_mcp_server:add_text_in_paint:588 - Actual: Starting text addition operation: 'Factorial: The product of an integer and all the integers below it; e.g., factorial four ( 4! ) is equal to 24.' at (760, 610) with box size (1000, 100)
+2025-04-18 13:13:28,535 - INFO - math_mcp_server:add_text_in_paint:600 - Paint window rectangle: (-8, -8, 1928, 1040)
+2025-04-18 13:13:28,535 - INFO - math_mcp_server:add_text_in_paint:606 - Switching to selection tool
+2025-04-18 13:13:29,053 - INFO - math_mcp_server:add_text_in_paint:611 - Selecting Text tool
+2025-04-18 13:13:31,193 - INFO - math_mcp_server:add_text_in_paint:621 - Creating text box
+2025-04-18 13:13:34,602 - INFO - math_mcp_server:add_text_in_paint:647 - Typing text: Factorial: The product of an integer and all the integers below it; e.g., factorial four ( 4! ) is equal to 24.
+2025-04-18 13:13:45,125 - ERROR - math_mcp_server:add_text_in_paint:681 - Error adding text: `)` not found
+2025-04-18 13:13:56,113 - INFO - math_mcp_server:add_text_in_paint:575 - Expected: Starting text addition operation: '5! = 5 x 4 x 3 x 2 x 1' at (760, 720) with box size (1000, 100)
+2025-04-18 13:13:56,113 - INFO - math_mcp_server:add_text_in_paint:588 - Actual: Starting text addition operation: '5! = 5 x 4 x 3 x 2 x 1' at (760, 720) with box size (1000, 100)
+2025-04-18 13:13:57,371 - INFO - math_mcp_server:add_text_in_paint:600 - Paint window rectangle: (-8, -8, 1928, 1040)
+2025-04-18 13:13:57,371 - INFO - math_mcp_server:add_text_in_paint:606 - Switching to selection tool
+2025-04-18 13:13:57,886 - INFO - math_mcp_server:add_text_in_paint:611 - Selecting Text tool
+2025-04-18 13:14:00,025 - INFO - math_mcp_server:add_text_in_paint:621 - Creating text box
+2025-04-18 13:14:03,428 - INFO - math_mcp_server:add_text_in_paint:647 - Typing text: 5! = 5 x 4 x 3 x 2 x 1
+2025-04-18 13:14:07,607 - INFO - math_mcp_server:add_text_in_paint:665 - Text addition completed
+2025-04-18 13:14:18,145 - INFO - math_mcp_server:add_text_in_paint:575 - Expected: Starting text addition operation: 'Factorial of 5 = 120' at (760, 830) with box size (1000, 100)
+2025-04-18 13:14:18,145 - INFO - math_mcp_server:add_text_in_paint:588 - Actual: Starting text addition operation: 'Factorial of 5 = 120' at (760, 830) with box size (1000, 100)
+2025-04-18 13:14:19,427 - INFO - math_mcp_server:add_text_in_paint:600 - Paint window rectangle: (-8, -8, 1928, 1040)
+2025-04-18 13:14:19,428 - INFO - math_mcp_server:add_text_in_paint:606 - Switching to selection tool
+2025-04-18 13:14:19,942 - INFO - math_mcp_server:add_text_in_paint:611 - Selecting Text tool
+2025-04-18 13:14:22,081 - INFO - math_mcp_server:add_text_in_paint:621 - Creating text box
+2025-04-18 13:14:25,475 - INFO - math_mcp_server:add_text_in_paint:647 - Typing text: Factorial of 5 = 120
+2025-04-18 13:14:29,691 - INFO - math_mcp_server:add_text_in_paint:665 - Text addition completed

@@ -26,6 +26,11 @@ from memory.working_memory import ExecutionHistory
 from desicion.desicion import DecisionMaker
 from memory.user_memory import UserMemory
 from planner.intent import IntentAnalyzer
+from userinteraction.prompt_input import (
+    get_user_prompt, 
+    display_processing_start,
+    display_processing_stop
+)
 
 
 # Get logger for this module
@@ -228,14 +233,29 @@ async def agent_main():
                 except Exception as e:
                     logging.error(f"Error creating tools description: {e}")
                     tools_description = "Error loading tools"
-                
-                # Create system prompt
-                logging.info("Created system prompt...")
-                
-                user_query = Config.DEFAULT_QUERIES["ascii_sum"]
-                execution_history.user_query = user_query
 
                 general_instructions = Config.GENERAL_INSTRUCTIONS.format(tools_description=tools_description)
+                
+                 # Get user prompt
+                user_query = await get_user_prompt(llm_manager, general_instructions)
+                if user_query is None:
+                    user_query = Config.DEFAULT_QUERIES["ascii_sum"]
+
+                # Set the query in execution history
+                execution_history.user_query = user_query
+                    
+                    
+                # Show processing start
+                display_processing_start()
+                
+                
+                # Create system prompt
+                #logging.info("Created system prompt...")
+                
+                #user_query = Config.DEFAULT_QUERIES["ascii_sum"]
+                #execution_history.user_query = user_query
+
+
 
                 # Show startup information
                 UserInteraction.show_information(
@@ -340,12 +360,18 @@ async def agent_main():
                     elif decision["step_type"] == "final_answer":
                         logging.info("\n=== Agent Execution Complete ===")
                         execution_history.final_answer = decision["response"]
+                         # On successful completion
+                        display_processing_stop(success=True, message="=== All tasks completed successfully! ===")
                         break
                         
                     iteration += 1
 
     except Exception as e:
         logging.error(f"Error in main execution: {e}")
+        display_processing_stop(
+            success=False, 
+            message=f"An error occurred: {str(e)}"
+        )
         import traceback
         traceback.print_exc()
     finally:
